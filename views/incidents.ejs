@@ -3,7 +3,7 @@
 <p class="sous-titre">Déclaration rapide depuis le terrain, notification automatique DG si gravité ≥ 4 (EF-SST-01/03/04)</p>
 
 <details class="form-ajout" open><summary>+ Déclarer un événement</summary><div>
-  <form method="post" action="/incidents">
+  <form method="post" action="/incidents" enctype="multipart/form-data">
     <div class="champs-3">
       <div class="champ"><label>Site *</label><select name="site_id" required><% sites.forEach(s => { %><option value="<%= s.id %>"><%= s.nom %></option><% }) %></select></div>
       <div class="champ"><label>Type *</label>
@@ -27,6 +27,8 @@
       <div class="champ"><label>Déclarant</label><input name="declarant" placeholder="par défaut : vous"></div>
     </div>
     <div class="champ"><label>Description *</label><textarea name="description" required></textarea></div>
+    <div class="champ"><label>Photos et preuves (5 max, 10 Mo par fichier)</label>
+      <input type="file" name="photos" multiple accept=".jpg,.jpeg,.png,.webp,.gif,.heic,.pdf" capture="environment"></div>
     <div class="champs-2">
       <div class="champ"><label>Mesures immédiates</label><textarea name="mesures_immediates"></textarea></div>
       <div class="champ"><label>Autorités notifiées</label><textarea name="autorites_notifiees"></textarea></div>

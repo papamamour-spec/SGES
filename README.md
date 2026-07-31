@@ -50,6 +50,8 @@ Mot de passe commun : `edk2026`
 | 19 — Reporting | `/reporting`, `/tableau-de-bord` | Tableau de bord Groupe/filiale à code couleur, rapport annuel IFC (AMR) généré depuis les données, notification d'incident au format IFC, exports CSV (EF-REP-01/02/03/06) |
 | 20 — GED | `/documents` | Typologie, versions, cycle de vie documentaire, recherche (EF-DOC-01/02/03) |
 
+**Pièces justificatives** : téléversement de fichiers (photos, PDF, documents — 10 Mo max, extensions contrôlées) sur les incidents (photos à la déclaration), les actions (clôture impossible sans pièce téléversée), les permis (scan du document) et les plaintes (y compris par le plaignant depuis le formulaire public). Les fichiers sont stockés dans `SGES_DATA_DIR/uploads` (donc sur le volume persistant en déploiement), servis uniquement aux utilisateurs authentifiés, et les pièces des plaintes sensibles restent dans le circuit confidentiel restreint.
+
 **Exigences transverses** : rôles fins par module avec profils lecture seule (DG, IFC), circuit confidentiel des plaintes sensibles inaccessible aux autres rôles et à l'administrateur, piste d'audit inaltérable de toutes les opérations sensibles (`/admin/journal`), désactivation logique sans suppression physique, interface responsive en français.
 
 Voir `docs/COUVERTURE_EXIGENCES.md` pour la traçabilité détaillée exigence par exigence et les limites du présent lot.

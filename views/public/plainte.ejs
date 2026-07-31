@@ -3,7 +3,7 @@
   <h1>Déposer une plainte ou une doléance</h1>
   <p class="sous-titre">Formulaire public — aucun compte n'est nécessaire. Un code de suivi vous sera remis.</p>
   <% if (erreur) { %><div class="alerte"><%= erreur %></div><% } %>
-  <form method="post" action="/plainte">
+  <form method="post" action="/plainte" enctype="multipart/form-data">
     <div class="champs-2">
       <div class="champ"><label>Vous êtes</label>
         <select name="mecanisme">
@@ -30,6 +30,8 @@
       <small style="color:var(--gris)">Les plaintes de harcèlement, violences, discrimination ou travail des enfants sont orientées automatiquement vers un circuit confidentiel restreint.</small>
     </div>
     <div class="champ"><label>Description des faits *</label><textarea name="description" required placeholder="Décrivez ce qui s'est passé, où et quand."></textarea></div>
+    <div class="champ"><label>Photos ou documents à l'appui (facultatif, 3 max, 10 Mo par fichier)</label>
+      <input type="file" name="photos" multiple accept=".jpg,.jpeg,.png,.webp,.gif,.heic,.pdf" capture="environment"></div>
     <div class="champ"><label>Mode de dépôt</label>
       <select name="mode" onchange="document.getElementById('coord').style.display = this.value==='anonyme' ? 'none' : 'grid'">
         <option value="confidentiel">Confidentiel (vos coordonnées ne sont visibles que de l'équipe de traitement)</option>

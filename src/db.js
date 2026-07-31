@@ -347,6 +347,21 @@ CREATE TABLE IF NOT EXISTS effectifs (
   UNIQUE(site_id, periode)
 );
 
+-- Pièces justificatives : fichiers rattachés aux objets métier (EF-PGM-06, EF-SST-01, EF-DOC-05)
+CREATE TABLE IF NOT EXISTS pieces_jointes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  objet TEXT NOT NULL,                         -- action | incident | plainte | permis | audit | document
+  objet_id INTEGER NOT NULL,
+  fichier TEXT NOT NULL,                       -- nom de stockage sur disque (aléatoire)
+  nom_original TEXT NOT NULL,
+  mime TEXT,
+  taille INTEGER,
+  televerse_par TEXT,                          -- e-mail interne ou 'public' (dépôt de plainte)
+  horodatage TEXT NOT NULL DEFAULT (datetime('now')),
+  actif INTEGER NOT NULL DEFAULT 1
+);
+CREATE INDEX IF NOT EXISTS idx_pj_objet ON pieces_jointes (objet, objet_id);
+
 -- Piste d'audit inaltérable (6.3 / 6.8) : aucune suppression physique dans l'application
 CREATE TABLE IF NOT EXISTS audit_log (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

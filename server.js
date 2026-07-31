@@ -36,6 +36,13 @@ app.use('/', require('./src/routes/reporting'));
 
 app.use((req, res) => res.status(404).render('erreur', { titre: 'Page introuvable', message: 'La page demandée n’existe pas.' }));
 app.use((err, req, res, next) => {
+  // Erreurs de téléversement : message clair plutôt qu'une erreur interne
+  if (err && (err.name === 'MulterError' || /Type de fichier non autorisé/.test(err.message || ''))) {
+    const message = err.code === 'LIMIT_FILE_SIZE' ? 'Fichier trop volumineux (10 Mo maximum par fichier).'
+      : err.code === 'LIMIT_FILE_COUNT' || err.code === 'LIMIT_UNEXPECTED_FILE' ? 'Trop de fichiers joints.'
+      : err.message;
+    return res.status(400).render('erreur', { titre: 'Téléversement refusé', message });
+  }
   console.error(err);
   res.status(500).render('erreur', { titre: 'Erreur interne', message: 'Une erreur est survenue. L’incident a été journalisé.' });
 });

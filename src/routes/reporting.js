@@ -4,6 +4,7 @@ const express = require('express');
 const db = require('../db');
 const { requireAuth } = require('../auth');
 const { logAudit, indicateursSST, inventaireGES, joursRestants, niveauAlerte } = require('../helpers');
+const { piecesPour } = require('../upload');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -57,7 +58,7 @@ router.get('/reporting/notification/:incidentId', (req, res) => {
   const plaintesLiees = db.prepare('SELECT code_suivi, nature, statut, date_depot FROM plaintes WHERE incident_id=? AND actif=1 AND sensible=0').all(i.id);
   const actions = db.prepare("SELECT * FROM actions WHERE origine='incident' AND origine_id=? AND actif=1").all(i.id);
   logAudit(req.session.user, 'export', 'notification_ifc', i.id, null);
-  res.render('reporting/notification', { i, plaintesLiees, actions, genereLe: new Date().toLocaleString('fr-FR') });
+  res.render('reporting/notification', { i, plaintesLiees, actions, pieces: piecesPour('incident', i.id), genereLe: new Date().toLocaleString('fr-FR') });
 });
 
 // ---- Exports CSV (EF-REP-06) — chaque export est journalisé (6.8)

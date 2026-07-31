@@ -23,7 +23,7 @@ Traçabilité entre le cahier des charges CDC-SGES-EDK-2026-01 et la présente v
 | EF-PGM-01/02 | Référentiel unique d'actions, structuration complète | Livré | `/actions` — origines PAES, audit, incident, plainte, inspection… |
 | EF-PGM-03 | Vue PAES avec numérotation contractuelle | Livré | Filtre PAES + bloc dédié au tableau de bord |
 | EF-PGM-05 | Notification et escalade des retards | Partiel | Statut « en retard » calculé et remonté ; notifications e-mail à venir |
-| EF-PGM-06 | Clôture interdite sans pièce justificative | Livré | Contrôle serveur bloquant |
+| EF-PGM-06 | Clôture interdite sans pièce justificative | Livré | Contrôle serveur bloquant : un fichier téléversé (document, photo, PV) est exigé pour clôturer |
 | EF-FOR-02/03 | Plan de formation, alertes habilitations | Livré | `/formations` |
 | EF-FOR-01/04/05 | Matrice de compétences, accueil sécurité, e-learning | À venir | |
 | EF-URG-03/04 | Exercices tracés, équipements et contrôles | Livré | `/urgences` |
@@ -38,7 +38,7 @@ Traçabilité entre le cahier des charges CDC-SGES-EDK-2026-01 et la présente v
 | EF-PLA-06/07 | Délais avec échéance, instruction jusqu'à clôture | Livré | Échéances, résolution, position du plaignant, recours |
 | EF-PLA-08 | Statistiques IFC | Livré | Volume, taux de résolution, délai moyen, répartition |
 | EF-PLA-09 | Suivi anti-représailles | Livré | Champ dédié aux plaintes internes |
-| EF-SST-01 | Déclaration rapide terrain avec géolocalisation | Partiel | Formulaire < 3 min avec GPS ; mode hors connexion mobile à venir |
+| EF-SST-01 | Déclaration rapide terrain avec photos et géolocalisation | Partiel | Formulaire < 3 min avec GPS et téléversement de photos (capture caméra sur mobile) ; mode hors connexion à venir |
 | EF-SST-02/03 | Typologie complète, gravité paramétrable et circuits | Livré | 9 types du CDC ; gravité ≥ 4 = significatif |
 | EF-SST-04 | Notification automatique holding/DG < 4 h | Livré | Horodatage automatique à la déclaration |
 | EF-SST-05 | Analyse des causes racines et actions correctives | Livré | Arbre des causes / 5P / Ishikawa + création d'action liée |
@@ -59,7 +59,7 @@ Traçabilité entre le cahier des charges CDC-SGES-EDK-2026-01 et la présente v
 | EF-REP-06 | Exports CSV/Excel | Livré | 5 exports CSV journalisés ; connecteur Power BI à venir |
 | EF-REP-04/05/07 | Rapports réglementaires nationaux, KPI hebdo, comparaisons | À venir | |
 | EF-DOC-01/02/03/04 | Bibliothèque, cycle de vie, versions, alertes de révision | Livré | `/documents` |
-| EF-DOC-05 | Dossiers de preuve exportables | Partiel | Preuves rattachées aux actions ; export groupé à venir |
+| EF-DOC-05 | Dossiers de preuve exportables | Partiel | Pièces justificatives (fichiers) rattachées aux actions, incidents, permis et plaintes, téléchargeables individuellement ; export groupé par action PAES/audit/site à venir |
 | Modules 9, 13–16 (PS2 détaillé, PS5–PS8) | | Partiel | Effectifs/genre/CDI/sous-traitance suivis ; risques PS1–PS8 qualifiables au registre ; écrans dédiés prévus au lot 3 |
 
 ## Exigences transverses (§6)
