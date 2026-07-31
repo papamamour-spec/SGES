@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= typeof titre !== 'undefined' && titre ? titre + ' — ' : '' %>SGES Groupe EDK</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="logo">SGES <span>Groupe EDK</span></div>
+  <div class="droite">
+    <% if (user) { %>
+      <span><%= user.nom %> · <span class="badge vert"><%= user.role %></span></span>
+      <form method="post" action="/logout"><button type="submit">Déconnexion</button></form>
+    <% } else { %>
+      <a href="/login" style="color:#fff">Connexion</a>
+    <% } %>
+  </div>
+</header>
+<% if (user) { %>
+<nav class="menu">
+  <a href="/tableau-de-bord" class="<%= path==='/tableau-de-bord' ? 'actif' : '' %>">Tableau de bord</a>
+  <a href="/politiques" class="<%= path.startsWith('/politiques') ? 'actif' : '' %>">Politiques</a>
+  <a href="/risques" class="<%= path.startsWith('/risques') ? 'actif' : '' %>">Risques</a>
+  <a href="/conformite" class="<%= path.startsWith('/conformite') ? 'actif' : '' %>">Conformité &amp; permis</a>
+  <a href="/actions" class="<%= path.startsWith('/actions') ? 'actif' : '' %>">Plans d'action / PAES</a>
+  <a href="/incidents" class="<%= path.startsWith('/incidents') ? 'actif' : '' %>">Incidents SST</a>
+  <a href="/plaintes" class="<%= path.startsWith('/plaintes') ? 'actif' : '' %>">Plaintes</a>
+  <a href="/environnement" class="<%= path.startsWith('/environnement') ? 'actif' : '' %>">Environnement</a>
+  <a href="/urgences" class="<%= path.startsWith('/urgences') ? 'actif' : '' %>">Urgences</a>
+  <a href="/formations" class="<%= path.startsWith('/formations') ? 'actif' : '' %>">Formations</a>
+  <a href="/parties-prenantes" class="<%= path.startsWith('/parties') ? 'actif' : '' %>">Parties prenantes</a>
+  <a href="/tiers" class="<%= path.startsWith('/tiers') ? 'actif' : '' %>">Tiers</a>
+  <a href="/audits" class="<%= path.startsWith('/audits') ? 'actif' : '' %>">Audits &amp; NC</a>
+  <a href="/documents" class="<%= path.startsWith('/documents') ? 'actif' : '' %>">Documents</a>
+  <a href="/reporting" class="<%= path.startsWith('/reporting') ? 'actif' : '' %>">Reporting IFC</a>
+  <% if (['admin','es_groupe','auditeur'].includes(user.role)) { %>
+    <a href="/admin" class="<%= path.startsWith('/admin') ? 'actif' : '' %>">Administration</a>
+  <% } %>
+</nav>
+<% } %>
+<main>

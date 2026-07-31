@@ -1,0 +1,41 @@
+<%- include('partials/header', { titre: 'Politiques' }) %>
+<h1>Module 1 — Politiques et gouvernance du SGES</h1>
+<p class="sous-titre">Hébergement, versionnage et cycle de validation des politiques E&amp;S (EF-GOV-01/02)</p>
+
+<details class="form-ajout"><summary>+ Nouvelle politique</summary><div>
+  <form method="post" action="/politiques">
+    <div class="champs-2">
+      <div class="champ"><label>Titre *</label><input name="titre" required></div>
+      <div class="champ"><label>Thème</label><input name="theme" placeholder="E&S, SST, droits humains…"></div>
+      <div class="champ"><label>Entité (vide = Groupe)</label>
+        <select name="entite_id"><option value="">Groupe</option><% entites.forEach(e => { %><option value="<%= e.id %>"><%= e.nom %></option><% }) %></select></div>
+      <div class="champ"><label>Version</label><input name="version" value="1.0"></div>
+      <div class="champ"><label>Approbateur</label><input name="approbateur"></div>
+      <div class="champ"><label>Prochaine révision</label><input type="date" name="date_revision"></div>
+    </div>
+    <div class="champ"><label>Résumé / contenu</label><textarea name="contenu"></textarea></div>
+    <button type="submit">Enregistrer</button>
+  </form>
+</div></details>
+
+<div class="table-scroll"><table>
+  <tr><th>Titre</th><th>Thème</th><th>Périmètre</th><th>Version</th><th>Statut</th><th>Publication</th><th>Révision</th><th>Cycle de validation</th></tr>
+  <% rows.forEach(p => { %>
+    <tr>
+      <td><b><%= p.titre %></b></td><td><%= p.theme || '—' %></td><td><%= p.entite_nom || 'Groupe' %></td><td><%= p.version %></td>
+      <td><span class="badge <%= p.statut==='publiee' ? 'vert' : p.statut==='retiree' ? 'gris' : 'orange' %>"><%= p.statut %></span></td>
+      <td><%= p.date_publication || '—' %></td><td><%= p.date_revision || '—' %></td>
+      <td>
+        <form class="inline" method="post" action="/politiques/<%= p.id %>/statut">
+          <select name="statut" class="mini">
+            <% ['redaction','revue','approuvee','publiee','retiree'].forEach(s => { %>
+              <option value="<%= s %>" <%= p.statut===s ? 'selected' : '' %>><%= s %></option>
+            <% }) %>
+          </select>
+          <button class="bouton mini" type="submit">OK</button>
+        </form>
+      </td>
+    </tr>
+  <% }) %>
+</table></div>
+<%- include('partials/footer') %>

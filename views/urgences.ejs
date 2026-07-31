@@ -1,0 +1,50 @@
+<%- include('partials/header', { titre: 'Urgences' }) %>
+<h1>Module 6 — Préparation et réponse aux situations d'urgence</h1>
+<p class="sous-titre">Équipements de sécurité et contrôles périodiques, exercices et simulations (EF-URG-03/04)</p>
+
+<h2>Équipements de sécurité</h2>
+<details class="form-ajout"><summary>+ Nouvel équipement</summary><div>
+  <form method="post" action="/equipements">
+    <div class="champs-3">
+      <div class="champ"><label>Site *</label><select name="site_id" required><% sites.forEach(s => { %><option value="<%= s.id %>"><%= s.nom %></option><% }) %></select></div>
+      <div class="champ"><label>Type *</label><input name="type" required placeholder="extincteur, RIA, kit antipollution…"></div>
+      <div class="champ"><label>Identifiant</label><input name="identifiant"></div>
+      <div class="champ"><label>Dernier contrôle</label><input type="date" name="dernier_controle"></div>
+      <div class="champ"><label>Prochain contrôle</label><input type="date" name="prochain_controle"></div>
+      <div class="champ"><label>État</label><select name="etat"><option>conforme</option><option value="non_conforme">non conforme</option><option value="hors_service">hors service</option></select></div>
+    </div>
+    <button type="submit">Enregistrer</button>
+  </form>
+</div></details>
+<div class="table-scroll"><table>
+  <tr><th>Site</th><th>Type</th><th>Identifiant</th><th>Dernier contrôle</th><th>Prochain contrôle</th><th>État</th></tr>
+  <% equipements.forEach(e => { %>
+    <tr>
+      <td><%= e.site_nom %></td><td><%= e.type %></td><td><%= e.identifiant || '—' %></td><td><%= e.dernier_controle || '—' %></td>
+      <td><%= e.prochain_controle || '—' %>
+        <% if (e.jours !== null && e.jours < 0) { %> <span class="badge rouge">en retard</span><% } else if (e.jours !== null && e.jours <= 30) { %> <span class="badge orange">J-<%= e.jours %></span><% } %></td>
+      <td><span class="badge <%= e.etat==='conforme' ? 'vert' : 'rouge' %>"><%= e.etat %></span></td>
+    </tr>
+  <% }) %>
+</table></div>
+
+<h2>Exercices et simulations</h2>
+<details class="form-ajout"><summary>+ Nouvel exercice</summary><div>
+  <form method="post" action="/exercices">
+    <div class="champs-3">
+      <div class="champ"><label>Site *</label><select name="site_id" required><% sites.forEach(s => { %><option value="<%= s.id %>"><%= s.nom %></option><% }) %></select></div>
+      <div class="champ"><label>Type *</label><input name="type" required placeholder="évacuation incendie, déversement…"></div>
+      <div class="champ"><label>Date *</label><input type="date" name="date_exercice" required></div>
+      <div class="champ"><label>Participants</label><input type="number" name="participants"></div>
+    </div>
+    <div class="champ"><label>Compte rendu et actions correctives</label><textarea name="compte_rendu"></textarea></div>
+    <button type="submit">Enregistrer</button>
+  </form>
+</div></details>
+<div class="table-scroll"><table>
+  <tr><th>Date</th><th>Site</th><th>Type</th><th>Participants</th><th>Compte rendu</th></tr>
+  <% exercices.forEach(x => { %>
+    <tr><td><%= x.date_exercice %></td><td><%= x.site_nom %></td><td><b><%= x.type %></b></td><td><%= x.participants || '—' %></td><td><%= x.compte_rendu || '—' %></td></tr>
+  <% }) %>
+</table></div>
+<%- include('partials/footer') %>

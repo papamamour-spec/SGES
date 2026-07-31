@@ -1,0 +1,51 @@
+<%- include('partials/header', { titre: 'Formations' }) %>
+<h1>Module 5 — Compétences, formation et habilitations</h1>
+<p class="sous-titre">Plan de formation E&amp;S/SST et alerte sur habilitations expirées (EF-FOR-02/03)</p>
+
+<h2>Habilitations et recyclages</h2>
+<details class="form-ajout"><summary>+ Nouvelle habilitation</summary><div>
+  <form method="post" action="/habilitations">
+    <div class="champs-3">
+      <div class="champ"><label>Titulaire *</label><input name="titulaire" required></div>
+      <div class="champ"><label>Type *</label><input name="type" required placeholder="électrique, secourisme, CACES, HACCP…"></div>
+      <div class="champ"><label>Site</label><select name="site_id"><option value="">—</option><% sites.forEach(s => { %><option value="<%= s.id %>"><%= s.nom %></option><% }) %></select></div>
+      <div class="champ"><label>Obtention</label><input type="date" name="date_obtention"></div>
+      <div class="champ"><label>Expiration *</label><input type="date" name="date_expiration" required></div>
+    </div>
+    <button type="submit">Enregistrer</button>
+  </form>
+</div></details>
+<div class="table-scroll"><table>
+  <tr><th>Titulaire</th><th>Type</th><th>Site</th><th>Expiration</th><th>État</th></tr>
+  <% habs.forEach(h => { %>
+    <tr>
+      <td><%= h.titulaire %></td><td><%= h.type %></td><td><%= h.site_nom || '—' %></td><td><%= h.date_expiration %></td>
+      <td><% if (h.jours < 0) { %><span class="badge rouge">expirée (<%= -h.jours %> j)</span>
+          <% } else if (h.jours <= 60) { %><span class="badge orange">expire dans <%= h.jours %> j</span>
+          <% } else { %><span class="badge vert">valide</span><% } %></td>
+    </tr>
+  <% }) %>
+</table></div>
+
+<h2>Sessions de formation</h2>
+<details class="form-ajout"><summary>+ Nouvelle session</summary><div>
+  <form method="post" action="/formations">
+    <div class="champs-3">
+      <div class="champ"><label>Thème *</label><input name="theme" required></div>
+      <div class="champ"><label>Site</label><select name="site_id"><option value="">—</option><% sites.forEach(s => { %><option value="<%= s.id %>"><%= s.nom %></option><% }) %></select></div>
+      <div class="champ"><label>Date *</label><input type="date" name="date_session" required></div>
+      <div class="champ"><label>Durée (h)</label><input type="number" step="any" name="duree_heures"></div>
+      <div class="champ"><label>Participants</label><input type="number" name="participants"></div>
+      <div class="champ"><label>Formateur</label><input name="formateur"></div>
+    </div>
+    <button type="submit">Enregistrer</button>
+  </form>
+</div></details>
+<div class="table-scroll"><table>
+  <tr><th>Date</th><th>Thème</th><th>Site</th><th>Durée (h)</th><th>Participants</th><th>Formateur</th></tr>
+  <% rows.forEach(f => { %>
+    <tr><td><%= f.date_session %></td><td><b><%= f.theme %></b></td><td><%= f.site_nom || '—' %></td>
+      <td><%= f.duree_heures %></td><td><%= f.participants %></td><td><%= f.formateur || '—' %></td></tr>
+  <% }) %>
+</table></div>
+<%- include('partials/footer') %>

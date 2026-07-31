@@ -1,0 +1,29 @@
+<%- include('../partials/header', { titre: 'Espace public E&S' }) %>
+<div class="public-hero">
+  <h1>Engagement environnemental et social du Groupe EDK</h1>
+  <p>Conformément à ses engagements auprès de la Société Financière Internationale (IFC) et aux Normes de Performance PS1 à PS8,
+  le Groupe EDK publie ici son information environnementale et sociale non confidentielle et met à disposition son mécanisme de plainte.</p>
+  <p>
+    <a class="bouton" style="background:#ffd166;color:#333;" href="/plainte">Déposer une plainte ou une doléance</a>
+    <a class="bouton secondaire" style="background:rgba(255,255,255,.15);color:#fff;border-color:#fff;" href="/suivi">Suivre ma plainte</a>
+  </p>
+</div>
+
+<div class="carte" style="margin-top:1.5rem;">
+  <h2 style="margin-top:0;">Nos politiques publiées</h2>
+  <% if (!politiques.length) { %><p style="color:var(--gris)">Publication en cours.</p><% } %>
+  <% politiques.forEach(p => { %>
+    <p>• <b><%= p.titre %></b> — version <%= p.version %><%= p.date_publication ? ', publiée le ' + p.date_publication : '' %></p>
+  <% }) %>
+</div>
+
+<div class="carte">
+  <h2 style="margin-top:0;">Le mécanisme de plainte en bref</h2>
+  <p>Toute personne — riverain, client, travailleur, partenaire — peut déposer une plainte ou une doléance :
+  par ce site web, par le numéro vert <b>800 00 EDK</b>, par les registres disponibles sur chaque site, par courriel ou par les boîtes à suggestions.</p>
+  <p>Le dépôt peut être <b>anonyme</b> ou <b>confidentiel</b>. Un code de suivi vous est remis ; un accusé de réception est émis immédiatement.
+  Les plaintes sensibles (harcèlement, violences, discrimination, travail des enfants) sont traitées dans un circuit confidentiel restreint.
+  Aucunes représailles ne seront tolérées à l'encontre d'un plaignant.</p>
+  <% if (!user) { %><p style="color:var(--gris);font-size:.85rem;">Personnel EDK : <a href="/login">accès à la plateforme de gestion</a>.</p><% } %>
+</div>
+<%- include('../partials/footer') %>

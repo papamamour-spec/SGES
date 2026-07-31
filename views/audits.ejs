@@ -1,0 +1,72 @@
+<%- include('partials/header', { titre: 'Audits & NC' }) %>
+<h1>Module 18 — Audits, non-conformités et amélioration continue</h1>
+<p class="sous-titre">Programme d'audits E&amp;S et cycle de vie des non-conformités jusqu'à vérification d'efficacité (EF-AUD-01/04)</p>
+
+<h2>Programme d'audits et inspections</h2>
+<details class="form-ajout"><summary>+ Nouvel audit / inspection</summary><div>
+  <form method="post" action="/audits">
+    <div class="champs-3">
+      <div class="champ"><label>Intitulé *</label><input name="intitule" required></div>
+      <div class="champ"><label>Type *</label><select name="type"><option>interne</option><option>externe</option><option value="inspection_securite">inspection sécurité</option><option>fournisseur</option></select></div>
+      <div class="champ"><label>Date *</label><input type="date" name="date_audit" required></div>
+      <div class="champ"><label>Site</label><select name="site_id"><option value="">—</option><% sites.forEach(s => { %><option value="<%= s.id %>"><%= s.nom %></option><% }) %></select></div>
+      <div class="champ"><label>Entité</label><select name="entite_id"><option value="">—</option><% entites.forEach(e => { %><option value="<%= e.id %>"><%= e.nom %></option><% }) %></select></div>
+      <div class="champ"><label>Auditeur</label><input name="auditeur"></div>
+      <div class="champ"><label>Score (0–100)</label><input type="number" name="score" min="0" max="100"></div>
+      <div class="champ"><label>Statut</label><select name="statut"><option>planifie</option><option>realise</option><option>clos</option></select></div>
+    </div>
+    <div class="champ"><label>Conclusions</label><textarea name="conclusions"></textarea></div>
+    <button type="submit">Enregistrer</button>
+  </form>
+</div></details>
+<div class="table-scroll"><table>
+  <tr><th>Date</th><th>Intitulé</th><th>Type</th><th>Périmètre</th><th>Auditeur</th><th>Score</th><th>Statut</th><th>Conclusions</th></tr>
+  <% rows.forEach(a => { %>
+    <tr><td><%= a.date_audit %></td><td><b><%= a.intitule %></b></td><td><%= a.type %></td><td><%= a.site_nom || a.entite_nom || 'Groupe' %></td>
+      <td><%= a.auditeur || '—' %></td>
+      <td><% if (a.score !== null) { %><span class="badge <%= a.score>=80 ? 'vert' : a.score>=60 ? 'orange' : 'rouge' %>"><%= a.score %></span><% } else { %>—<% } %></td>
+      <td><span class="badge <%= a.statut==='clos' ? 'vert' : a.statut==='realise' ? 'orange' : 'gris' %>"><%= a.statut %></span></td>
+      <td style="font-size:.8rem;"><%= a.conclusions || '—' %></td></tr>
+  <% }) %>
+</table></div>
+
+<h2>Non-conformités</h2>
+<details class="form-ajout"><summary>+ Nouvelle non-conformité</summary><div>
+  <form method="post" action="/nc">
+    <div class="champs-3">
+      <div class="champ"><label>Origine *</label><select name="origine"><option>audit</option><option>inspection</option><option value="depassement_seuil">dépassement de seuil</option><option>conformite</option></select></div>
+      <div class="champ"><label>Site</label><select name="site_id"><option value="">—</option><% sites.forEach(s => { %><option value="<%= s.id %>"><%= s.nom %></option><% }) %></select></div>
+      <div class="champ"><label>Gravité</label><select name="gravite"><option>majeure</option><option selected>mineure</option><option>observation</option></select></div>
+      <div class="champ"><label>Échéance</label><input type="date" name="echeance"></div>
+      <div class="champ"><label>Responsable</label><input name="responsable"></div>
+    </div>
+    <div class="champ"><label>Description *</label><textarea name="description" required></textarea></div>
+    <button type="submit">Enregistrer</button>
+  </form>
+</div></details>
+<div class="table-scroll"><table>
+  <tr><th>Description</th><th>Site</th><th>Gravité</th><th>Échéance</th><th>Responsable</th><th>Cycle de vie</th></tr>
+  <% ncs.forEach(n => { %>
+    <tr>
+      <td><b><%= n.description %></b><% if (n.verification_efficacite) { %><br><small style="color:var(--gris)">Vérification d'efficacité : <%= n.verification_efficacite %></small><% } %></td>
+      <td><%= n.site_nom || '—' %></td>
+      <td><span class="badge <%= n.gravite==='majeure' ? 'rouge' : n.gravite==='mineure' ? 'orange' : 'gris' %>"><%= n.gravite %></span></td>
+      <td><%= n.echeance || '—' %></td><td><%= n.responsable || '—' %></td>
+      <td>
+        <span class="badge <%= n.statut==='verifiee' ? 'vert' : n.statut==='ouverte' ? 'rouge' : 'orange' %>"><%= n.statut %></span>
+        <% if (n.statut !== 'verifiee') { %>
+        <details><summary style="cursor:pointer;font-size:.8rem;">faire avancer</summary>
+          <form method="post" action="/nc/<%= n.id %>/statut" style="min-width:180px;">
+            <select name="statut" class="mini">
+              <% ['ouverte','action_definie','corrigee','verifiee'].forEach(s => { %><option value="<%= s %>" <%= n.statut===s ? 'selected' : '' %>><%= s %></option><% }) %>
+            </select>
+            <input name="verification_efficacite" placeholder="Vérification d'efficacité (si close)" style="margin-top:.3rem;">
+            <button class="bouton mini" type="submit" style="margin-top:.3rem;">Valider</button>
+          </form>
+        </details>
+        <% } %>
+      </td>
+    </tr>
+  <% }) %>
+</table></div>
+<%- include('partials/footer') %>

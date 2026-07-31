@@ -1,0 +1,52 @@
+<%- include('partials/header', { titre: 'Plaintes' }) %>
+<h1>Module 8 — Mécanisme de gestion des plaintes</h1>
+<p class="sous-titre">Deux dispositifs distincts : externe (communautés, PS1) et interne (travailleurs, PS2) · dépôt public sur <a href="/plainte" target="_blank">/plainte</a></p>
+
+<div class="grille-kpi">
+  <div class="kpi"><div class="valeur"><%= stats.total || 0 %></div><div class="libelle">Plaintes reçues</div></div>
+  <div class="kpi"><div class="valeur"><%= stats.total ? Math.round((stats.resolues/stats.total)*100) : 0 %> %</div><div class="libelle">Taux de résolution</div></div>
+  <div class="kpi"><div class="valeur"><%= stats.delai_moyen ?? '—' %> j</div><div class="libelle">Délai moyen de traitement</div></div>
+  <div class="kpi"><div class="valeur"><%= stats.externes || 0 %> / <%= (stats.total||0)-(stats.externes||0) %></div><div class="libelle">Externes / internes</div></div>
+</div>
+
+<% if (nbSensiblesMasquees > 0) { %>
+  <div class="info"><%= nbSensiblesMasquees %> plainte(s) sensible(s) non affichée(s) : circuit confidentiel réservé au gestionnaire des plaintes sensibles (EF-PLA-05).</div>
+<% } %>
+
+<details class="form-ajout"><summary>+ Saisir une plainte (registre papier, numéro vert, courriel…)</summary><div>
+  <form method="post" action="/plaintes">
+    <div class="champs-3">
+      <div class="champ"><label>Mécanisme *</label><select name="mecanisme"><option value="externe">Externe (communautés)</option><option value="interne">Interne (travailleurs)</option></select></div>
+      <div class="champ"><label>Canal *</label>
+        <select name="canal"><option value="registre_papier">Registre papier</option><option value="numero_vert">Numéro vert</option><option value="courriel">Courriel</option><option value="boite">Boîte à suggestions</option><option value="web">Web</option><option value="mobile">Mobile</option></select></div>
+      <div class="champ"><label>Site</label><select name="site_id"><option value="">—</option><% sites.forEach(s => { %><option value="<%= s.id %>"><%= s.nom %></option><% }) %></select></div>
+      <div class="champ"><label>Nature</label><input name="nature"></div>
+      <div class="champ"><label>PS concernée</label><select name="ps_concernee"><option value="">—</option><% ['PS1','PS2','PS3','PS4','PS5','PS6','PS7','PS8'].forEach(ps => { %><option><%= ps %></option><% }) %></select></div>
+      <div class="champ"><label>Gravité (1–5)</label><input type="number" name="gravite" min="1" max="5" value="2"></div>
+      <div class="champ"><label>Nom du plaignant</label><input name="plaignant_nom"></div>
+      <div class="champ"><label>Contact</label><input name="plaignant_contact"></div>
+      <div class="champ"><label>Échéance de traitement</label><input type="date" name="date_echeance"></div>
+    </div>
+    <div class="champ"><label>Description *</label><textarea name="description" required></textarea></div>
+    <div class="champ">
+      <label><input type="checkbox" name="anonyme" value="1" style="width:auto"> Dépôt anonyme</label>
+      <label><input type="checkbox" name="sensible" value="1" style="width:auto"> Plainte sensible (harcèlement, VBG, travail des enfants, discrimination) → circuit restreint</label>
+    </div>
+    <button type="submit">Enregistrer (accusé de réception horodaté automatique)</button>
+  </form>
+</div></details>
+
+<div class="table-scroll"><table>
+  <tr><th>Code</th><th>Mécanisme</th><th>Canal</th><th>Site</th><th>Nature</th><th>Gravité</th><th>Dépôt</th><th>Statut</th></tr>
+  <% rows.forEach(p => { %>
+    <tr>
+      <td><a href="/plaintes/<%= p.id %>"><b><%= p.code_suivi %></b></a><% if (p.sensible) { %> <span class="badge rouge">sensible</span><% } %><% if (p.anonyme) { %> <span class="badge gris">anonyme</span><% } %></td>
+      <td><%= p.mecanisme %></td><td><%= p.canal %></td><td><%= p.site_nom || '—' %></td><td><%= p.nature || '—' %></td>
+      <td><span class="badge <%= p.gravite>=4 ? 'rouge' : p.gravite===3 ? 'orange' : 'vert' %>"><%= p.gravite %>/5</span></td>
+      <td><%= p.date_depot.slice(0,16) %></td>
+      <td><span class="badge <%= ['resolue','close'].includes(p.statut) ? 'vert' : p.statut==='rejetee' ? 'gris' : 'orange' %>"><%= p.statut %></span></td>
+    </tr>
+  <% }) %>
+</table></div>
+<p class="no-print"><a class="bouton secondaire" href="/export/plaintes.csv">Exporter en CSV (hors plaintes sensibles)</a></p>
+<%- include('partials/footer') %>

@@ -1,0 +1,31 @@
+<%- include('../partials/header', { titre: 'Reporting IFC' }) %>
+<h1>Module 19 — Reporting et restitutions IFC</h1>
+<p class="sous-titre">Rapport annuel de suivi (AMR), notifications d'incident, exports (§8, EF-REP-02/03/06)</p>
+
+<div class="carte">
+  <h2 style="margin-top:0;">Rapport annuel de suivi E&amp;S (AMR)</h2>
+  <p>Rapport généré automatiquement depuis les données de la Plateforme : avancement PAES, indicateurs du chapitre 7, incidents significatifs, bilan du mécanisme de plaintes, conformité réglementaire.</p>
+  <a class="bouton" href="/reporting/rapport-annuel">Générer le rapport <%= new Date().getFullYear() %></a>
+  <a class="bouton secondaire" href="/reporting/rapport-annuel?annee=<%= new Date().getFullYear()-1 %>">Année précédente</a>
+</div>
+
+<div class="carte">
+  <h2 style="margin-top:0;">Notifications d'incident au format IFC</h2>
+  <p>Incidents significatifs (gravité ≥ 4) pour lesquels une notification au prêteur peut être générée :</p>
+  <% if (!incidents.length) { %><p style="color:var(--gris)">Aucun incident significatif enregistré.</p><% } %>
+  <% incidents.forEach(i => { %>
+    <p>• <%= i.date_evenement %> — <%= i.site_nom %> (<%= i.type %>, gravité <%= i.gravite %>/5)
+      <a class="bouton mini" href="/reporting/notification/<%= i.id %>">Générer la notification</a></p>
+  <% }) %>
+</div>
+
+<div class="carte">
+  <h2 style="margin-top:0;">Exports (EF-REP-06)</h2>
+  <p>Formats ouverts, traçables dans la piste d'audit ; utilisables pour Excel et Power BI.</p>
+  <a class="bouton secondaire" href="/export/incidents.csv">Incidents</a>
+  <a class="bouton secondaire" href="/export/plaintes.csv">Plaintes</a>
+  <a class="bouton secondaire" href="/export/actions.csv">Plans d'action</a>
+  <a class="bouton secondaire" href="/export/permis.csv">Permis</a>
+  <a class="bouton secondaire" href="/export/consommations.csv">Consommations</a>
+</div>
+<%- include('../partials/footer') %>

@@ -1,0 +1,45 @@
+<%- include('partials/header', { titre: p.code_suivi }) %>
+<h1>Plainte <%= p.code_suivi %>
+  <% if (p.sensible) { %><span class="badge rouge">circuit confidentiel</span><% } %>
+  <% if (p.anonyme) { %><span class="badge gris">anonyme</span><% } %>
+</h1>
+<p class="sous-titre">Mécanisme <%= p.mecanisme %> · canal <%= p.canal %> · <%= p.site_nom || 'site non précisé' %> · déposée le <%= p.date_depot %></p>
+
+<div class="carte">
+  <p><b>Nature :</b> <%= p.nature || '—' %> <% if (p.ps_concernee) { %><span class="badge violet"><%= p.ps_concernee %></span><% } %></p>
+  <p><b>Description :</b> <%= p.description %></p>
+  <% if (!p.anonyme && p.plaignant_nom) { %><p><b>Plaignant :</b> <%= p.plaignant_nom %> <%= p.plaignant_contact ? '· ' + p.plaignant_contact : '' %></p><% } %>
+  <p><b>Accusé de réception :</b> <%= p.date_accuse || '—' %> · <b>Échéance de traitement :</b> <%= p.date_echeance || '—' %>
+    · <b>Recevable :</b> <%= p.recevable === null ? 'à qualifier' : (p.recevable ? 'oui' : 'non') %></p>
+  <% if (p.resolution) { %><p><b>Résolution :</b> <%= p.resolution %> <% if (p.satisfaction) { %><span class="badge <%= p.satisfaction==='accepte' ? 'vert' : 'orange' %>"><%= p.satisfaction %></span><% } %></p><% } %>
+  <% if (p.suivi_represailles) { %><p><b>Suivi anti-représailles (EF-PLA-09) :</b> <%= p.suivi_represailles %></p><% } %>
+  <p><span class="badge <%= ['resolue','close'].includes(p.statut) ? 'vert' : 'orange' %>">statut : <%= p.statut %></span></p>
+</div>
+
+<% if (incident) { %>
+<div class="carte">
+  <h2 style="margin-top:0;">Incident lié</h2>
+  <p><a href="/incidents/<%= incident.id %>">Incident n°<%= incident.id %></a> — <%= incident.type %>, <%= incident.site_nom %>, <%= incident.date_evenement %></p>
+</div>
+<% } %>
+
+<div class="carte no-print">
+  <h2 style="margin-top:0;">Instruction et traitement (EF-PLA-07)</h2>
+  <form method="post" action="/plaintes/<%= p.id %>/traiter">
+    <div class="champs-3">
+      <div class="champ"><label>Statut</label>
+        <select name="statut"><% ['recue','en_instruction','resolue','close','rejetee'].forEach(s => { %><option value="<%= s %>" <%= p.statut===s ? 'selected' : '' %>><%= s %></option><% }) %></select></div>
+      <div class="champ"><label>Recevabilité</label>
+        <select name="recevable"><option value="">—</option><option value="1" <%= p.recevable===1?'selected':'' %>>recevable</option><option value="0" <%= p.recevable===0?'selected':'' %>>non recevable</option></select></div>
+      <div class="champ"><label>Position du plaignant</label>
+        <select name="satisfaction"><option value="">—</option><option value="accepte" <%= p.satisfaction==='accepte'?'selected':'' %>>accepte</option><option value="refuse" <%= p.satisfaction==='refuse'?'selected':'' %>>refuse</option><option value="recours" <%= p.satisfaction==='recours'?'selected':'' %>>recours</option></select></div>
+    </div>
+    <div class="champ"><label>Résolution proposée</label><textarea name="resolution"><%= p.resolution || '' %></textarea></div>
+    <% if (p.mecanisme === 'interne') { %>
+      <div class="champ"><label>Suivi anti-représailles (EF-PLA-09)</label><textarea name="suivi_represailles"><%= p.suivi_represailles || '' %></textarea></div>
+    <% } %>
+    <div class="champ"><label>Relier à un incident (n°)</label><input name="incident_id" value="<%= p.incident_id || '' %>"></div>
+    <button type="submit">Enregistrer</button>
+  </form>
+</div>
+<%- include('partials/footer') %>

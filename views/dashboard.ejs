@@ -1,0 +1,66 @@
+<%- include('partials/header', { titre: 'Tableau de bord' }) %>
+<h1>Tableau de bord Groupe — <%= annee %></h1>
+<p class="sous-titre">Pilotage consolidé E&amp;S · code couleur cohérent avec le dispositif de KPI du Groupe (EF-REP-01)</p>
+
+<form method="get" class="no-print" style="margin-bottom:1rem;">
+  <label>Périmètre</label>
+  <select name="entite" class="mini" onchange="this.form.submit()">
+    <option value="">Groupe consolidé (<%= nbSites %> sites)</option>
+    <% entites.forEach(e => { %>
+      <option value="<%= e.id %>" <%= entiteId===e.id ? 'selected' : '' %>><%= e.nom %></option>
+    <% }) %>
+  </select>
+</form>
+
+<div class="grille-kpi">
+  <div class="kpi <%= incidentsSignificatifs > 0 ? 'rouge' : '' %>"><div class="valeur"><%= incidentsSignificatifs %></div><div class="libelle">Incidents significatifs (gravité ≥ 4)</div></div>
+  <div class="kpi"><div class="valeur"><%= sst.tf ?? '—' %></div><div class="libelle">Taux de fréquence (LTIFR)</div></div>
+  <div class="kpi"><div class="valeur"><%= sst.tg ?? '—' %></div><div class="libelle">Taux de gravité</div></div>
+  <div class="kpi"><div class="valeur"><%= sst.trir ?? '—' %></div><div class="libelle">TRIR</div></div>
+  <div class="kpi <%= permisAlerte.length ? 'orange' : '' %>"><div class="valeur"><%= permisAlerte.length %></div><div class="libelle">Permis en alerte d'échéance</div></div>
+  <div class="kpi <%= actionsRetard ? 'rouge' : '' %>"><div class="valeur"><%= actionsRetard %></div><div class="libelle">Actions en retard</div></div>
+  <div class="kpi"><div class="valeur"><%= plaintes.total || 0 %></div><div class="libelle">Plaintes reçues (dont <%= plaintes.sensibles || 0 %> sensibles)</div></div>
+  <div class="kpi <%= nc ? 'orange' : '' %>"><div class="valeur"><%= nc %></div><div class="libelle">Non-conformités ouvertes</div></div>
+  <div class="kpi"><div class="valeur"><%= ges.total %> t</div><div class="libelle">Émissions GES scopes 1+2 (tCO₂e)</div></div>
+  <div class="kpi"><div class="valeur"><%= completude %>/<%= nbSites %></div><div class="libelle">Sites ayant déclaré (<%= dernierePeriode || '—' %>)</div></div>
+</div>
+
+<div class="carte">
+  <h2 style="margin-top:0;">Suivi des actions PAES IFC (EF-PGM-03)</h2>
+  <div class="table-scroll"><table>
+    <tr><th>Réf. contractuelle</th><th>Action</th><th>Responsable</th><th>Échéance</th><th>Statut</th></tr>
+    <% paes.forEach(a => { %>
+      <tr>
+        <td><b><%= a.ref_paes %></b></td><td><%= a.description %></td><td><%= a.responsable %></td><td><%= a.echeance %></td>
+        <td><span class="badge <%= a.statut==='cloturee' ? 'vert' : a.statut==='en_retard' ? 'rouge' : 'orange' %>"><%= a.statut %></span></td>
+      </tr>
+    <% }) %>
+  </table></div>
+</div>
+
+<div class="carte">
+  <h2 style="margin-top:0;">Alertes permis et autorisations (EF-CONF-03)</h2>
+  <% if (!permisAlerte.length) { %><div class="info">Aucune échéance dans les 180 prochains jours.</div><% } %>
+  <% permisAlerte.forEach(p => { %>
+    <div class="alerte" style="border-left-color:<%= p.alerte.classe==='rouge' ? 'var(--rouge)' : p.alerte.classe==='orange' ? 'var(--orange)' : '#c9a800' %>">
+      <b><%= p.alerte.seuil %></b> — <%= p.type %> · <%= p.site_nom %> ·
+      <%= p.jours < 0 ? `expiré depuis ${-p.jours} j` : `expire dans ${p.jours} j (${p.date_expiration})` %>
+    </div>
+  <% }) %>
+</div>
+
+<div class="carte">
+  <h2 style="margin-top:0;">Derniers événements déclarés</h2>
+  <div class="table-scroll"><table>
+    <tr><th>Date</th><th>Site</th><th>Type</th><th>Gravité</th><th>Description</th><th>Statut</th></tr>
+    <% incidentsRecents.forEach(i => { %>
+      <tr>
+        <td><%= i.date_evenement %></td><td><%= i.site_nom %></td><td><%= i.type %></td>
+        <td><span class="badge <%= i.gravite>=4 ? 'rouge' : i.gravite===3 ? 'orange' : 'vert' %>"><%= i.gravite %>/5</span></td>
+        <td><a href="/incidents/<%= i.id %>"><%= i.description.slice(0, 90) %><%= i.description.length > 90 ? '…' : '' %></a></td>
+        <td><span class="badge gris"><%= i.statut %></span></td>
+      </tr>
+    <% }) %>
+  </table></div>
+</div>
+<%- include('partials/footer') %>

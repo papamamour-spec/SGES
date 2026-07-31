@@ -1,0 +1,64 @@
+<%- include('partials/header', { titre: 'Environnement' }) %>
+<h1>Module 11 — Ressources, pollution et empreinte environnementale (PS3)</h1>
+<p class="sous-titre">Consommations, inventaire GES (GHG Protocol, facteurs versionnés), déchets par flux (EF-ENV-01/02/03)</p>
+
+<div class="grille-kpi">
+  <div class="kpi"><div class="valeur"><%= ges.scope1 %> t</div><div class="libelle">GES scope 1 (tCO₂e, <%= annee %>)</div></div>
+  <div class="kpi"><div class="valeur"><%= ges.scope2 %> t</div><div class="libelle">GES scope 2 (tCO₂e, <%= annee %>)</div></div>
+  <div class="kpi"><div class="valeur"><%= ges.total %> t</div><div class="libelle">Total scopes 1+2</div></div>
+</div>
+
+<div class="carte">
+  <h2 style="margin-top:0;">Inventaire GES par poste</h2>
+  <div class="table-scroll"><table>
+    <tr><th>Poste</th><th>Scope</th><th>Quantité</th><th>Facteur (kgCO₂e/unité)</th><th>Version</th><th>tCO₂e</th></tr>
+    <% ges.detail.forEach(d => { %>
+      <tr><td><%= d.type %></td><td><%= d.scope %></td><td><%= d.total.toLocaleString('fr-FR') %></td>
+        <td><%= d.facteur_kgco2e %> <small style="color:var(--gris)"><%= d.source || '' %></small></td><td><%= d.version %></td><td><b><%= d.tco2e %></b></td></tr>
+    <% }) %>
+  </table></div>
+</div>
+
+<h2>Relevés de consommations</h2>
+<details class="form-ajout"><summary>+ Nouveau relevé</summary><div>
+  <form method="post" action="/consommations">
+    <div class="champs-3">
+      <div class="champ"><label>Site *</label><select name="site_id" required><% sites.forEach(s => { %><option value="<%= s.id %>"><%= s.nom %></option><% }) %></select></div>
+      <div class="champ"><label>Période (AAAA-MM) *</label><input name="periode" pattern="\d{4}-\d{2}" placeholder="2026-07" required></div>
+      <div class="champ"><label>Type *</label>
+        <select name="type"><option value="electricite_kwh">Électricité (kWh)</option><option value="diesel_l">Diesel (L)</option><option value="essence_l">Essence (L)</option><option value="gaz_kg">Gaz (kg)</option><option value="eau_m3">Eau (m³)</option></select></div>
+      <div class="champ"><label>Valeur *</label><input type="number" step="any" name="valeur" required></div>
+    </div>
+    <button type="submit">Enregistrer</button>
+  </form>
+</div></details>
+<div class="table-scroll"><table>
+  <tr><th>Période</th><th>Type</th><th>Total Groupe</th></tr>
+  <% conso.forEach(c => { %><tr><td><%= c.periode %></td><td><%= c.type %></td><td><%= c.total.toLocaleString('fr-FR') %></td></tr><% }) %>
+</table></div>
+
+<h2>Registre des déchets</h2>
+<details class="form-ajout"><summary>+ Nouvelle sortie de déchets</summary><div>
+  <form method="post" action="/dechets">
+    <div class="champs-3">
+      <div class="champ"><label>Site *</label><select name="site_id" required><% sites.forEach(s => { %><option value="<%= s.id %>"><%= s.nom %></option><% }) %></select></div>
+      <div class="champ"><label>Période (AAAA-MM) *</label><input name="periode" pattern="\d{4}-\d{2}" required></div>
+      <div class="champ"><label>Flux *</label><input name="flux" required placeholder="huiles usagées, DEEE…"></div>
+      <div class="champ"><label>Quantité (kg) *</label><input type="number" step="any" name="quantite_kg" required></div>
+      <div class="champ"><label>Filière</label>
+        <select name="filiere"><option>recyclage</option><option>valorisation</option><option>enfouissement</option><option>traitement agréé</option></select></div>
+      <div class="champ"><label>Prestataire agréé</label><input name="prestataire"></div>
+      <div class="champ"><label>Bordereau de suivi</label><input name="bordereau"></div>
+    </div>
+    <button type="submit">Enregistrer</button>
+  </form>
+</div></details>
+<div class="table-scroll"><table>
+  <tr><th>Période</th><th>Site</th><th>Flux</th><th>Quantité (kg)</th><th>Filière</th><th>Prestataire</th><th>Bordereau</th></tr>
+  <% dechets.forEach(d => { %>
+    <tr><td><%= d.periode %></td><td><%= d.site_nom %></td><td><%= d.flux %></td><td><%= d.quantite_kg.toLocaleString('fr-FR') %></td>
+      <td><%= d.filiere || '—' %></td><td><%= d.prestataire || '—' %></td><td><%= d.bordereau || '—' %></td></tr>
+  <% }) %>
+</table></div>
+<p class="no-print"><a class="bouton secondaire" href="/export/consommations.csv">Exporter les consommations en CSV</a></p>
+<%- include('partials/footer') %>

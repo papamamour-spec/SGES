@@ -1,0 +1,58 @@
+<%- include('partials/header', { titre: 'Incident #' + i.id }) %>
+<h1>Incident n°<%= i.id %> — <%= i.type %> <span class="badge <%= i.gravite>=4 ? 'rouge' : i.gravite===3 ? 'orange' : 'vert' %>">gravité <%= i.gravite %>/5</span></h1>
+<p class="sous-titre"><%= i.site_nom %> (<%= i.entite_nom %>) · <%= i.date_evenement %> · déclaré par <%= i.declarant || '—' %></p>
+
+<div class="carte">
+  <p><b>Description :</b> <%= i.description %></p>
+  <% if (i.lat && i.lng) { %><p><b>Géolocalisation :</b> <%= i.lat %>, <%= i.lng %></p><% } %>
+  <% if (i.mesures_immediates) { %><p><b>Mesures immédiates :</b> <%= i.mesures_immediates %></p><% } %>
+  <% if (i.autorites_notifiees) { %><p><b>Autorités notifiées :</b> <%= i.autorites_notifiees %></p><% } %>
+  <% if (i.jours_arret) { %><p><b>Jours d'arrêt :</b> <%= i.jours_arret %></p><% } %>
+  <% if (i.notifie_dg_le) { %><div class="info">Direction Générale et Responsable E&amp;S Groupe notifiés le <%= i.notifie_dg_le %> (EF-SST-04).</div><% } %>
+  <p class="no-print">
+    <a class="bouton" href="/reporting/notification/<%= i.id %>">Générer la notification IFC</a>
+    <span class="badge gris">statut : <%= i.statut %></span>
+  </p>
+</div>
+
+<div class="carte">
+  <h2 style="margin-top:0;">Analyse des causes racines (EF-SST-05)</h2>
+  <% if (i.cause_racine) { %>
+    <p><b>Cause racine :</b> <%= i.cause_racine %> <span class="badge gris"><%= i.methode_analyse || 'méthode non précisée' %></span></p>
+  <% } %>
+  <form method="post" action="/incidents/<%= i.id %>/analyse">
+    <div class="champs-3">
+      <div class="champ"><label>Cause racine</label><input name="cause_racine" value="<%= i.cause_racine || '' %>"></div>
+      <div class="champ"><label>Méthode</label>
+        <select name="methode_analyse">
+          <% ['arbre des causes','5P','Ishikawa'].forEach(m => { %><option <%= i.methode_analyse===m ? 'selected' : '' %>><%= m %></option><% }) %>
+        </select></div>
+      <div class="champ"><label>Statut</label>
+        <select name="statut"><% ['declare','en_analyse','clos'].forEach(s => { %><option value="<%= s %>" <%= i.statut===s ? 'selected' : '' %>><%= s %></option><% }) %></select></div>
+    </div>
+    <div class="champs-3">
+      <div class="champ"><label>Nouvelle action corrective (optionnel)</label><input name="action_corrective"></div>
+      <div class="champ"><label>Responsable de l'action</label><input name="action_responsable"></div>
+      <div class="champ"><label>Échéance</label><input type="date" name="action_echeance"></div>
+    </div>
+    <button type="submit">Enregistrer l'analyse</button>
+  </form>
+</div>
+
+<div class="carte">
+  <h2 style="margin-top:0;">Actions correctives liées</h2>
+  <% if (!actions.length) { %><p style="color:var(--gris)">Aucune action liée.</p><% } %>
+  <% actions.forEach(a => { %>
+    <p>• <%= a.description %> — <%= a.responsable || '—' %>, échéance <%= a.echeance || '—' %>
+      <span class="badge <%= a.statut==='cloturee' ? 'vert' : 'orange' %>"><%= a.statut %></span></p>
+  <% }) %>
+</div>
+
+<div class="carte">
+  <h2 style="margin-top:0;">Plaintes liées</h2>
+  <% if (!plaintesLiees.length) { %><p style="color:var(--gris)">Aucune plainte reliée à cet incident.</p><% } %>
+  <% plaintesLiees.forEach(p => { %>
+    <p>• <a href="/plaintes/<%= p.id %>"><%= p.code_suivi %></a> — <%= p.nature || '—' %> <span class="badge gris"><%= p.statut %></span></p>
+  <% }) %>
+</div>
+<%- include('partials/footer') %>
