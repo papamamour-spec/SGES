@@ -60,6 +60,19 @@ Voir `docs/COUVERTURE_EXIGENCES.md` pour la traçabilité détaillée exigence p
 - **Base** : SQLite (better-sqlite3, mode WAL) — mono-instance, migrable vers PostgreSQL pour la production multi-tenant.
 - **Sécurité** : sessions httpOnly, mots de passe bcrypt, contrôle d'accès par rôle sur chaque route, journalisation des consultations sensibles et exports.
 
+## Déploiement sur Railway
+
+Le dépôt est prêt pour Railway : la base est initialisée automatiquement au premier démarrage et le port est lu depuis `PORT`.
+
+1. Sur [railway.com](https://railway.com) : **New Project → Deploy from GitHub repo** → sélectionner `papamamour-spec/SGES` (branche `main`). Le build Node.js est détecté automatiquement (`npm start`).
+2. **Stockage persistant (indispensable)** : sur le service, clic droit → **Attach Volume**, point de montage `/data`. Sans volume, la base SQLite serait réinitialisée à chaque redéploiement.
+3. **Variables d'environnement** (onglet *Variables* du service) :
+   - `SGES_DATA_DIR` = `/data`
+   - `SESSION_SECRET` = une valeur aléatoire longue (ex. `openssl rand -hex 32`)
+4. **Settings → Networking → Generate Domain** pour obtenir l'URL publique (HTTPS fourni par Railway).
+
+Chaque push sur `main` redéploie automatiquement ; les données du volume sont conservées.
+
 ## Correspondance avec le lotissement du CDC
 
 Ce dépôt couvre le périmètre des **lots 1 et 2** (socle de conformité + terrain et incidents) et une partie des lots 3 et 4 (parties prenantes, tiers, formations, reporting IFC). Restent à réaliser dans les lots suivants : application mobile hors connexion avec synchronisation, intégrations SIRH/ERP/SharePoint/Power BI, SSO/2FA, notifications par e-mail/SMS, modules PS5 à PS8 approfondis, moteur de grilles d'audit paramétrables.
