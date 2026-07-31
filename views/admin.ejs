@@ -34,7 +34,7 @@
     <% users.forEach(u => { %>
       <tr>
         <td><%= u.nom %></td><td><%= u.email %></td>
-        <td><span class="badge <%= u.role==='ifc' ? 'violet' : u.role==='plaintes_sensibles' ? 'rouge' : 'vert' %>"><%= u.role %></span></td>
+        <td><span class="badge <%= u.role==='ifc' ? 'violet' : u.role==='plaintes_sensibles' ? 'rouge' : 'vert' %>"><%= roles[u.role] || u.role %></span></td>
         <td><%= u.entite_nom || 'N/A' %></td><td><%= u.site_nom || 'N/A' %></td>
         <td><span class="badge <%= u.actif ? 'vert' : 'gris' %>"><%= u.actif ? 'actif' : 'désactivé' %></span></td>
         <% if (estAdmin) { %>
