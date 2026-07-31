@@ -6,26 +6,27 @@ Plateforme numérique de **Système de Gestion Environnementale et Sociale (SGES
 
 ```bash
 npm install
-npm run seed     # initialise la base avec le périmètre EDK et des données de démonstration
 npm start        # http://localhost:3000
 ```
 
 Prérequis : Node.js ≥ 18. La base SQLite est créée dans `data/` (configurable via `SGES_DATA_DIR`).
 
-## Comptes de démonstration
+## Démarrage en production : accès administrateur seul
 
-Mot de passe commun : `edk2026`
+La base démarre **vide** : au premier lancement, seul le **compte administrateur** est créé (plus aucune donnée de démonstration). L'administrateur construit ensuite tout le reste depuis `/admin` : les entités, les sites, puis les comptes des autres utilisateurs (rôles du §6.3 du CDC).
 
-| Compte | Rôle (§6.3 du CDC) |
-|---|---|
-| admin@edk.sn | Administrateur fonctionnel |
-| es.groupe@edk.sn | Responsable E&S Groupe |
-| es.oil@edk.sn | Responsable E&S filiale (EDK OIL) |
-| site.yoff@edk.sn | Correspondant site |
-| dg@edk.sn | Direction Générale (lecture) |
-| audit@edk.sn | Auditeur interne |
-| ifc@edk.sn | Consultation externe IFC (lecture seule) |
-| plaintes.sensibles@edk.sn | Gestionnaire plaintes sensibles (circuit confidentiel) |
+Compte administrateur initial, configurable par variables d'environnement :
+
+| Variable | Rôle | Défaut |
+|---|---|---|
+| `ADMIN_EMAIL` | Adresse du compte administrateur | `admin@edk.sn` |
+| `ADMIN_PASSWORD` | Mot de passe initial (8 caractères min) | S'il est absent, un mot de passe aléatoire est généré et affiché **une seule fois** dans le journal de démarrage (logs Railway : onglet *Deploy Logs*) |
+
+Dans tous les cas, changez le mot de passe à la première connexion (`/admin`, modifier votre compte).
+
+**Instance déjà déployée avec les données de démonstration** : connectez-vous en administrateur puis utilisez `/admin` → « Zone de réinitialisation » (confirmation `REINITIALISER`). Toutes les données métier et tous les comptes sauf le vôtre sont supprimés ; la piste d'audit et les facteurs d'émission GES sont conservés.
+
+**Jeu de démonstration (optionnel)** : `npm run seed:demo` sur une base vide charge le périmètre EDK simulé et les comptes de démonstration (mot de passe `edk2026`) pour les démos IFC. Jamais chargé automatiquement.
 
 ## Fonctionnalités livrées
 
@@ -75,6 +76,7 @@ Le dépôt est prêt pour Railway : la base est initialisée automatiquement au 
 3. **Variables d'environnement** (onglet *Variables* du service) :
    - `SGES_DATA_DIR` = `/data`
    - `SESSION_SECRET` = une valeur aléatoire longue (ex. `openssl rand -hex 32`)
+   - `ADMIN_EMAIL` et `ADMIN_PASSWORD` = compte administrateur initial (voir section précédente)
    - `BREVO_API_KEY` = clé API Brevo (transactionnel) pour l'envoi réel des e-mails — sans elle, les envois sont simulés et journalisés
    - `EMAIL_FROM` = expéditeur, ex. `SGES Groupe EDK <sges@votredomaine.sn>` (adresse d'un expéditeur validé dans Brevo)
    - `APP_URL` = URL publique du service (ex. `https://sges-production.up.railway.app`) pour les liens dans les e-mails

@@ -72,6 +72,73 @@
 </div>
 
 <div class="carte">
+  <h2 style="margin-top:0;">Référentiel organisationnel : entités et sites</h2>
+  <p style="font-size:.85rem;color:var(--gris);">Le périmètre (filiales et sites) est construit ici par l'administrateur ; il alimente toutes les listes de la Plateforme. La désactivation est logique et réversible.</p>
+
+  <% if (estAdmin) { %>
+  <details class="form-ajout"><summary>+ Créer une entité (filiale ou holding)</summary><div>
+    <form method="post" action="/admin/entites">
+      <div class="champs-3">
+        <div class="champ"><label>Code *</label><input name="code" required placeholder="OIL" style="text-transform:uppercase;"></div>
+        <div class="champ"><label>Nom *</label><input name="nom" required placeholder="EDK OIL"></div>
+        <div class="champ"><label>Type</label><select name="type"><option value="filiale">Filiale</option><option value="holding">Holding</option></select></div>
+      </div>
+      <div class="champ"><label>Profil de risque E&amp;S dominant</label><input name="profil_risque"></div>
+      <button type="submit">Créer l'entité</button>
+    </form>
+  </div></details>
+  <details class="form-ajout"><summary>+ Créer un site</summary><div>
+    <form method="post" action="/admin/sites">
+      <div class="champs-3">
+        <div class="champ"><label>Entité *</label>
+          <select name="entite_id" required><% entites.forEach(e => { %><option value="<%= e.id %>"><%= e.nom %></option><% }) %></select></div>
+        <div class="champ"><label>Code *</label><input name="code" required placeholder="ST-01" style="text-transform:uppercase;"></div>
+        <div class="champ"><label>Nom *</label><input name="nom" required></div>
+        <div class="champ"><label>Type *</label>
+          <select name="type"><option>station</option><option>depot</option><option>magasin</option><option>restaurant</option><option>usine</option><option>entrepot</option><option>siege</option></select></div>
+        <div class="champ"><label>Pays</label><input name="pays" value="Sénégal"></div>
+        <div class="champ"><label>Ville</label><input name="ville"></div>
+      </div>
+      <button type="submit">Créer le site</button>
+    </form>
+  </div></details>
+  <% } %>
+
+  <% if (!entitesAll.length) { %>
+    <div class="alerte">Aucune entité définie : commencez par créer les entités du Groupe, puis leurs sites, avant d'ouvrir les comptes utilisateurs.</div>
+  <% } else { %>
+  <div class="table-scroll"><table>
+    <tr><th>Code</th><th>Entité / site</th><th>Type</th><th>Localisation</th><th>État</th><% if (estAdmin) { %><th></th><% } %></tr>
+    <% entitesAll.forEach(e => { %>
+      <tr>
+        <td><b><%= e.code %></b></td><td><b><%= e.nom %></b></td><td><%= e.type === 'holding' ? 'Holding' : 'Filiale' %></td><td>N/A</td>
+        <td><span class="badge <%= e.actif ? 'vert' : 'gris' %>"><%= e.actif ? 'active' : 'désactivée' %></span></td>
+        <% if (estAdmin) { %>
+        <td><form class="inline" method="post" action="/admin/entites/<%= e.id %>/actif">
+          <input type="hidden" name="actif" value="<%= e.actif ? 0 : 1 %>">
+          <button class="bouton mini <%= e.actif ? 'secondaire' : '' %>" type="submit"><%= e.actif ? 'Désactiver' : 'Réactiver' %></button>
+        </form></td>
+        <% } %>
+      </tr>
+      <% sitesAll.filter(s => s.entite_id === e.id).forEach(s => { %>
+        <tr>
+          <td style="padding-left:1.6rem;"><%= s.code %></td><td style="padding-left:1.6rem;"><%= s.nom %></td>
+          <td><%= s.type %></td><td><%= [s.ville, s.pays].filter(Boolean).join(', ') || 'N/A' %></td>
+          <td><span class="badge <%= s.actif ? 'vert' : 'gris' %>"><%= s.actif ? 'actif' : 'désactivé' %></span></td>
+          <% if (estAdmin) { %>
+          <td><form class="inline" method="post" action="/admin/sites/<%= s.id %>/actif">
+            <input type="hidden" name="actif" value="<%= s.actif ? 0 : 1 %>">
+            <button class="bouton mini <%= s.actif ? 'secondaire' : '' %>" type="submit"><%= s.actif ? 'Désactiver' : 'Réactiver' %></button>
+          </form></td>
+          <% } %>
+        </tr>
+      <% }) %>
+    <% }) %>
+  </table></div>
+  <% } %>
+</div>
+
+<div class="carte">
   <h2 style="margin-top:0;">Notifications e-mail (Brevo)</h2>
   <p>
     État : <% if (mailConfigure) { %><span class="badge vert">clé API configurée · envois réels</span><% } else { %>
@@ -98,4 +165,18 @@
     <% }) %>
   </table></div>
 </div>
+
+<% if (estAdmin) { %>
+<div class="carte" style="border-color:var(--rouge);">
+  <h2 style="margin-top:0;color:var(--rouge);">Zone de réinitialisation</h2>
+  <p style="font-size:.85rem;">Supprime définitivement <b>toutes les données métier</b> (entités, sites, incidents, plaintes, actions, documents, pièces jointes…)
+  et <b>tous les comptes sauf le vôtre</b>. La piste d'audit et les facteurs d'émission sont conservés.
+  À utiliser une seule fois pour passer d'une instance de démonstration à la production.</p>
+  <form method="post" action="/admin/purge" style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;"
+    onsubmit="return confirm('Confirmer la réinitialisation complète ? Cette opération est irréversible.');">
+    <input name="confirmation" placeholder="Tapez REINITIALISER pour confirmer" required style="max-width:300px;">
+    <button type="submit" style="background:var(--rouge);">Réinitialiser la Plateforme</button>
+  </form>
+</div>
+<% } %>
 <%- include('partials/footer') %>
