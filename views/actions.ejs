@@ -42,13 +42,16 @@
       <td><span class="badge <%= a.priorite==='haute' ? 'rouge' : a.priorite==='moyenne' ? 'orange' : 'gris' %>"><%= a.priorite %></span></td>
       <td><span class="badge <%= a.statut==='cloturee' ? 'vert' : a.statut==='en_retard' ? 'rouge' : 'orange' %>"><%= a.statut %></span></td>
       <td>
+        <% if (a.nb_pieces) { %><span class="badge vert">📎 <%= a.nb_pieces %></span><% } %>
         <% if (a.statut !== 'cloturee') { %>
         <details><summary style="cursor:pointer;font-size:.8rem;">mettre à jour</summary>
-          <form method="post" action="/actions/<%= a.id %>/statut" style="min-width:200px;">
+          <form method="post" action="/actions/<%= a.id %>/statut" enctype="multipart/form-data" style="min-width:220px;">
             <select name="statut" class="mini">
               <% ['ouverte','en_cours','en_retard','cloturee'].forEach(s => { %><option value="<%= s %>" <%= a.statut===s ? 'selected' : '' %>><%= s %></option><% }) %>
             </select>
-            <input name="preuve" placeholder="Pièce justificative (obligatoire pour clôturer)" style="margin-top:.3rem;">
+            <input type="file" name="fichiers" multiple accept=".jpg,.jpeg,.png,.webp,.gif,.heic,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt" style="margin-top:.3rem;font-size:.75rem;">
+            <input name="preuve" placeholder="Commentaire sur la preuve (optionnel)" style="margin-top:.3rem;">
+            <small style="color:var(--gris);font-size:.72rem;">Clôture impossible sans pièce téléversée (EF-PGM-06)</small>
             <button class="bouton mini" type="submit" style="margin-top:.3rem;">Valider</button>
           </form>
         </details>

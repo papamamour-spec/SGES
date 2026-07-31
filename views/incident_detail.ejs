@@ -16,6 +16,19 @@
 </div>
 
 <div class="carte">
+  <h2 style="margin-top:0;">Pièces jointes et photos</h2>
+  <% if (!pieces.length) { %><p style="color:var(--gris)">Aucune pièce jointe.</p><% } %>
+  <% pieces.forEach(pj => { %>
+    <p>📎 <a href="/fichiers/<%= pj.id %>"><%= pj.nom_original %></a>
+      <small style="color:var(--gris)">(<%= Math.round((pj.taille||0)/1024) %> Ko, téléversé le <%= pj.horodatage %> par <%= pj.televerse_par %>)</small></p>
+  <% }) %>
+  <form class="no-print" method="post" action="/incidents/<%= i.id %>/pieces" enctype="multipart/form-data" style="display:flex;gap:.5rem;align-items:center;margin-top:.5rem;">
+    <input type="file" name="fichiers" multiple accept=".jpg,.jpeg,.png,.webp,.gif,.heic,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt" required>
+    <button class="bouton mini" type="submit">Ajouter</button>
+  </form>
+</div>
+
+<div class="carte">
   <h2 style="margin-top:0;">Analyse des causes racines (EF-SST-05)</h2>
   <% if (i.cause_racine) { %>
     <p><b>Cause racine :</b> <%= i.cause_racine %> <span class="badge gris"><%= i.methode_analyse || 'méthode non précisée' %></span></p>

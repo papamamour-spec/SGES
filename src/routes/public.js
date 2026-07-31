@@ -3,6 +3,7 @@
 const express = require('express');
 const db = require('../db');
 const { logAudit, genCodeSuivi } = require('../helpers');
+const { upload, enregistrerFichiers } = require('../upload');
 
 const router = express.Router();
 
@@ -16,7 +17,7 @@ router.get('/plainte', (req, res) => {
   res.render('public/plainte', { sites: sitesPublics, erreur: null });
 });
 
-router.post('/plainte', (req, res) => {
+router.post('/plainte', upload.array('photos', 3), (req, res) => {
   const b = req.body;
   if (!b.description || !b.description.trim()) {
     const sitesPublics = db.prepare("SELECT s.id, s.nom, s.ville, s.pays FROM sites s WHERE s.actif=1 ORDER BY s.pays, s.nom").all();
@@ -25,11 +26,12 @@ router.post('/plainte', (req, res) => {
   const anonyme = b.mode === 'anonyme';
   const sensible = ['harcelement', 'vbg', 'travail_enfants', 'discrimination'].includes(b.nature) ? 1 : 0;
   const code = genCodeSuivi();
-  db.prepare(`INSERT INTO plaintes (code_suivi, mecanisme, canal, site_id, nature, description, plaignant_nom, plaignant_contact, anonyme, sensible, gravite, date_accuse, date_echeance)
+  const r = db.prepare(`INSERT INTO plaintes (code_suivi, mecanisme, canal, site_id, nature, description, plaignant_nom, plaignant_contact, anonyme, sensible, gravite, date_accuse, date_echeance)
     VALUES (?,?,?,?,?,?,?,?,?,?,?,datetime('now'),date('now','+15 days'))`)
     .run(code, b.mecanisme === 'interne' ? 'interne' : 'externe', 'web', b.site_id || null, b.nature || null, b.description.trim(),
       anonyme ? null : (b.nom || null), anonyme ? null : (b.contact || null), anonyme ? 1 : 0, sensible, sensible ? 4 : 2);
-  logAudit(null, 'creation', 'plainte_publique', null, `${code}${sensible ? ' (circuit sensible)' : ''}`);
+  const nPhotos = enregistrerFichiers(req.files, 'plainte', r.lastInsertRowid, 'public');
+  logAudit(null, 'creation', 'plainte_publique', null, `${code}${sensible ? ' (circuit sensible)' : ''}${nPhotos ? ` — ${nPhotos} pièce(s)` : ''}`);
   res.render('public/plainte_ok', { code });
 });
 

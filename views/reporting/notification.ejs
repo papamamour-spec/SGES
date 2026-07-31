@@ -9,6 +9,10 @@
   <p class="sous-titre">Groupe EDK SA · document généré par la Plateforme SGES le <%= genereLe %> · réf. interne INC-<%= i.id %></p>
 
   <h2>1. Description factuelle</h2>
+  <% if (pieces.length) { %>
+  <p><b>Pièces justificatives jointes :</b>
+    <% pieces.forEach((pj, k) => { %><a href="/fichiers/<%= pj.id %>"><%= pj.nom_original %></a><%= k < pieces.length-1 ? ' · ' : '' %><% }) %></p>
+  <% } %>
   <p><b>Type d'événement :</b> <%= i.type %> · <b>Gravité :</b> <%= i.gravite %>/5</p>
   <p><b>Date et heure :</b> <%= i.date_evenement %></p>
   <p><b>Lieu :</b> <%= i.site_nom %>, <%= i.ville || '' %> (<%= i.pays %>) — entité <%= i.entite_nom %>

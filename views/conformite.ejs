@@ -12,7 +12,7 @@
 
 <h2>Permis, agréments et autorisations</h2>
 <details class="form-ajout"><summary>+ Nouveau permis / autorisation</summary><div>
-  <form method="post" action="/permis">
+  <form method="post" action="/permis" enctype="multipart/form-data">
     <div class="champs-3">
       <div class="champ"><label>Site *</label><select name="site_id" required><% sites.forEach(s => { %><option value="<%= s.id %>"><%= s.nom %></option><% }) %></select></div>
       <div class="champ"><label>Type *</label><input name="type" required placeholder="Récépissé ICPE, agrément…"></div>
@@ -22,6 +22,8 @@
       <div class="champ"><label>Date d'expiration</label><input type="date" name="date_expiration"></div>
     </div>
     <div class="champ"><label>Commentaire</label><input name="commentaire"></div>
+    <div class="champ"><label>Document du permis (scan PDF ou photo)</label>
+      <input type="file" name="fichiers" multiple accept=".jpg,.jpeg,.png,.webp,.pdf"></div>
     <button type="submit">Enregistrer</button>
   </form>
 </div></details>
@@ -31,7 +33,14 @@
   <% permis.forEach(p => { %>
     <tr>
       <td><%= p.site_nom %> <small style="color:var(--gris)">(<%= p.pays %>)</small></td>
-      <td><b><%= p.type %></b><% if (p.commentaire) { %><br><small style="color:var(--gris)"><%= p.commentaire %></small><% } %></td>
+      <td><b><%= p.type %></b><% if (p.commentaire) { %><br><small style="color:var(--gris)"><%= p.commentaire %></small><% } %>
+        <% p.pieces.forEach(pj => { %><br>📎 <a href="/fichiers/<%= pj.id %>" style="font-size:.8rem;"><%= pj.nom_original %></a><% }) %>
+        <details class="no-print" style="font-size:.78rem;"><summary style="cursor:pointer;color:var(--gris);">joindre le document</summary>
+          <form method="post" action="/permis/<%= p.id %>/pieces" enctype="multipart/form-data" style="display:flex;gap:.4rem;align-items:center;margin-top:.3rem;">
+            <input type="file" name="fichiers" multiple accept=".jpg,.jpeg,.png,.webp,.pdf" required>
+            <button class="bouton mini" type="submit">OK</button>
+          </form>
+        </details></td>
       <td><%= p.reference || '—' %></td><td><%= p.autorite || '—' %></td>
       <td><%= p.date_expiration || '—' %><% if (p.jours !== null) { %> <small>(<%= p.jours<0 ? -p.jours + ' j de retard' : 'J-' + p.jours %>)</small><% } %></td>
       <td><% if (p.alerte) { %><span class="badge <%= p.alerte.classe %>"><%= p.alerte.seuil %></span><% } else { %><span class="badge vert">OK</span><% } %></td>

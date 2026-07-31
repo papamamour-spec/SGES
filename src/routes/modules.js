@@ -1,7 +1,9 @@
+const path = require('path');
 const express = require('express');
 const db = require('../db');
 const { requireAuth, requireRole, requireWrite } = require('../auth');
 const { logAudit, joursRestants, niveauAlerte, genCodeSuivi } = require('../helpers');
+const { upload, UPLOAD_DIR, enregistrerFichiers, piecesPour, nbPieces } = require('../upload');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -58,17 +60,23 @@ router.post('/risques/:id/revision', requireWrite, (req, res) => {
 /* ============ Module 3 — Conformité, permis, exigences ============ */
 router.get('/conformite', (req, res) => {
   const permis = db.prepare(`SELECT p.*, s.nom site_nom, s.pays FROM permis p JOIN sites s ON s.id=p.site_id WHERE p.actif=1 ORDER BY p.date_expiration`).all()
-    .map((p) => ({ ...p, jours: joursRestants(p.date_expiration), alerte: niveauAlerte(joursRestants(p.date_expiration)) }));
+    .map((p) => ({ ...p, jours: joursRestants(p.date_expiration), alerte: niveauAlerte(joursRestants(p.date_expiration)), pieces: piecesPour('permis', p.id) }));
   const exigences = db.prepare('SELECT * FROM exigences_legales WHERE actif=1 ORDER BY covenant_ifc DESC, pays, thematique').all();
   const taux = exigences.length
     ? Math.round((exigences.filter((e) => e.statut_conformite === 'conforme').length / exigences.length) * 100) : null;
   res.render('conformite', { permis, exigences, taux, sites: sites() });
 });
-router.post('/permis', requireWrite, (req, res) => {
+router.post('/permis', requireWrite, upload.array('fichiers', 3), (req, res) => {
   const b = req.body;
   const r = db.prepare(`INSERT INTO permis (site_id, type, reference, autorite, date_obtention, date_expiration, statut, commentaire) VALUES (?,?,?,?,?,?,?,?)`)
     .run(b.site_id, b.type, b.reference || null, b.autorite || null, b.date_obtention || null, b.date_expiration || null, b.statut || 'valide', b.commentaire || null);
+  enregistrerFichiers(req.files, 'permis', r.lastInsertRowid, req.session.user.email);
   logAudit(req.session.user, 'creation', 'permis', r.lastInsertRowid, b.type);
+  res.redirect('/conformite');
+});
+router.post('/permis/:id/pieces', requireWrite, upload.array('fichiers', 3), (req, res) => {
+  const n = enregistrerFichiers(req.files, 'permis', Number(req.params.id), req.session.user.email);
+  logAudit(req.session.user, 'creation', 'piece_jointe', Number(req.params.id), `permis : ${n} fichier(s)`);
   res.redirect('/conformite');
 });
 router.post('/exigences', requireWrite, (req, res) => {
@@ -88,7 +96,9 @@ router.post('/exigences/:id/statut', requireWrite, (req, res) => {
 router.get('/actions', (req, res) => {
   const filtre = req.query.origine ? 'AND a.origine = ?' : '';
   const params = req.query.origine ? [req.query.origine] : [];
-  const rows = db.prepare(`SELECT a.*, e.nom entite_nom, s.nom site_nom FROM actions a
+  const rows = db.prepare(`SELECT a.*, e.nom entite_nom, s.nom site_nom,
+    (SELECT COUNT(*) FROM pieces_jointes pj WHERE pj.objet='action' AND pj.objet_id=a.id AND pj.actif=1) nb_pieces
+    FROM actions a
     LEFT JOIN entites e ON e.id=a.entite_id LEFT JOIN sites s ON s.id=a.site_id
     WHERE a.actif=1 ${filtre} ORDER BY CASE a.statut WHEN 'en_retard' THEN 0 WHEN 'ouverte' THEN 1 WHEN 'en_cours' THEN 2 ELSE 3 END, a.echeance`).all(...params);
   res.render('actions', { rows, origine: req.query.origine || '', entites: entites(), sites: sites() });
@@ -101,15 +111,16 @@ router.post('/actions', requireWrite, (req, res) => {
   logAudit(req.session.user, 'creation', 'action', r.lastInsertRowid, b.description);
   res.redirect('/actions');
 });
-// Clôture interdite sans preuve (EF-PGM-06)
-router.post('/actions/:id/statut', requireWrite, (req, res) => {
+// Clôture interdite sans pièce justificative documentaire téléversée (EF-PGM-06)
+router.post('/actions/:id/statut', requireWrite, upload.array('fichiers', 5), (req, res) => {
   const b = req.body;
-  if (b.statut === 'cloturee' && (!b.preuve || !b.preuve.trim())) {
-    return res.status(400).render('erreur', { titre: 'Preuve requise', message: 'La clôture d’une action exige une pièce justificative (EF-PGM-06).' });
+  const nouveaux = enregistrerFichiers(req.files, 'action', Number(req.params.id), req.session.user.email);
+  if (b.statut === 'cloturee' && nouveaux === 0 && nbPieces('action', Number(req.params.id)) === 0) {
+    return res.status(400).render('erreur', { titre: 'Preuve documentaire requise', message: 'La clôture d’une action exige une pièce justificative téléversée — document, photo ou PV (EF-PGM-06).' });
   }
   db.prepare(`UPDATE actions SET statut=?, preuve=COALESCE(?, preuve), validateur=?, cloture_le=CASE WHEN ?='cloturee' THEN datetime('now') ELSE cloture_le END WHERE id=?`)
     .run(b.statut, b.preuve || null, b.statut === 'cloturee' ? req.session.user.nom : null, b.statut, req.params.id);
-  logAudit(req.session.user, 'modification', 'action', req.params.id, `statut → ${b.statut}`);
+  logAudit(req.session.user, 'modification', 'action', req.params.id, `statut → ${b.statut}${nouveaux ? ` (+${nouveaux} pièce(s))` : ''}`);
   res.redirect(req.get('referer') || '/actions');
 });
 
@@ -204,7 +215,15 @@ router.get('/plaintes/:id', (req, res) => {
   if (p.sensible) logAudit(req.session.user, 'consultation_sensible', 'plainte', p.id, null);
   const incident = p.incident_id ? db.prepare('SELECT i.*, s.nom site_nom FROM incidents i JOIN sites s ON s.id=i.site_id WHERE i.id=?').get(p.incident_id) : null;
   const actions = db.prepare("SELECT * FROM actions WHERE origine='plainte' AND origine_id=? AND actif=1").all(p.id);
-  res.render('plainte_detail', { p, incident, actions });
+  res.render('plainte_detail', { p, incident, actions, pieces: piecesPour('plainte', p.id) });
+});
+router.post('/plaintes/:id/pieces', requireWrite, upload.array('fichiers', 5), (req, res) => {
+  const p = db.prepare('SELECT * FROM plaintes WHERE id=? AND actif=1').get(req.params.id);
+  if (!p) return res.status(404).render('erreur', { titre: 'Introuvable', message: 'Plainte inexistante.' });
+  if (p.sensible && !ROLES_SENSIBLES.includes(req.session.user.role)) return res.status(403).render('erreur', { titre: 'Circuit restreint', message: 'Accès réservé.' });
+  const n = enregistrerFichiers(req.files, 'plainte', p.id, req.session.user.email);
+  logAudit(req.session.user, 'creation', 'piece_jointe', p.id, `plainte ${p.code_suivi} : ${n} fichier(s)`);
+  res.redirect(`/plaintes/${p.id}`);
 });
 router.post('/plaintes', requireWrite, (req, res) => {
   const b = req.body;
@@ -242,9 +261,14 @@ router.get('/incidents/:id', (req, res) => {
   if (!i) return res.status(404).render('erreur', { titre: 'Introuvable', message: 'Incident inexistant.' });
   const actions = db.prepare("SELECT * FROM actions WHERE origine='incident' AND (origine_id=? OR site_id=?) AND actif=1").all(i.id, i.site_id);
   const plaintesLiees = db.prepare('SELECT * FROM plaintes WHERE incident_id=? AND actif=1 AND sensible=0').all(i.id);
-  res.render('incident_detail', { i, actions, plaintesLiees });
+  res.render('incident_detail', { i, actions, plaintesLiees, pieces: piecesPour('incident', i.id) });
 });
-router.post('/incidents', requireWrite, (req, res) => {
+router.post('/incidents/:id/pieces', requireWrite, upload.array('fichiers', 5), (req, res) => {
+  const n = enregistrerFichiers(req.files, 'incident', Number(req.params.id), req.session.user.email);
+  logAudit(req.session.user, 'creation', 'piece_jointe', Number(req.params.id), `incident : ${n} fichier(s)`);
+  res.redirect(`/incidents/${req.params.id}`);
+});
+router.post('/incidents', requireWrite, upload.array('photos', 5), (req, res) => {
   const b = req.body;
   const gravite = Number(b.gravite || 2);
   // Notification automatique DG/holding pour tout événement significatif (EF-SST-04)
@@ -254,7 +278,8 @@ router.post('/incidents', requireWrite, (req, res) => {
     .run(b.site_id, b.type, gravite, b.date_evenement, b.description, b.declarant || req.session.user.nom,
       b.lat ? Number(b.lat) : null, b.lng ? Number(b.lng) : null, Number(b.jours_arret || 0), Number(b.deces || 0),
       b.mesures_immediates || null, b.autorites_notifiees || null, notifie);
-  logAudit(req.session.user, 'creation', 'incident', r.lastInsertRowid, `${b.type} gravité ${gravite}${notifie ? ' — DG notifiée' : ''}`);
+  const nPhotos = enregistrerFichiers(req.files, 'incident', r.lastInsertRowid, req.session.user.email);
+  logAudit(req.session.user, 'creation', 'incident', r.lastInsertRowid, `${b.type} gravité ${gravite}${notifie ? ' — DG notifiée' : ''}${nPhotos ? ` — ${nPhotos} photo(s)` : ''}`);
   res.redirect(`/incidents/${r.lastInsertRowid}`);
 });
 router.post('/incidents/:id/analyse', requireWrite, (req, res) => {
@@ -363,6 +388,22 @@ router.post('/documents/:id/statut', requireWrite, (req, res) => {
   db.prepare("UPDATE documents SET statut=?, maj_le=datetime('now') WHERE id=?").run(req.body.statut, req.params.id);
   logAudit(req.session.user, 'modification', 'document', req.params.id, `statut → ${req.body.statut}`);
   res.redirect('/documents');
+});
+
+/* ============ Téléchargement des pièces justificatives ============ */
+router.get('/fichiers/:id', (req, res) => {
+  const pj = db.prepare('SELECT * FROM pieces_jointes WHERE id=? AND actif=1').get(req.params.id);
+  if (!pj) return res.status(404).render('erreur', { titre: 'Introuvable', message: 'Pièce jointe inexistante.' });
+  // Les pièces d'une plainte sensible restent dans le circuit restreint (EF-PLA-05)
+  if (pj.objet === 'plainte') {
+    const p = db.prepare('SELECT sensible, code_suivi FROM plaintes WHERE id=?').get(pj.objet_id);
+    if (p && p.sensible && !ROLES_SENSIBLES.includes(req.session.user.role)) {
+      logAudit(req.session.user, 'consultation_sensible', 'piece_refusee', pj.id, `pièce de la plainte ${p.code_suivi}`);
+      return res.status(403).render('erreur', { titre: 'Circuit restreint', message: 'Cette pièce relève du circuit confidentiel des plaintes sensibles.' });
+    }
+    if (p && p.sensible) logAudit(req.session.user, 'consultation_sensible', 'piece_jointe', pj.id, null);
+  }
+  res.download(path.join(UPLOAD_DIR, pj.fichier), pj.nom_original);
 });
 
 /* ============ Administration ============ */

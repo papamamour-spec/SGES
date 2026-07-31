@@ -16,6 +16,19 @@
   <p><span class="badge <%= ['resolue','close'].includes(p.statut) ? 'vert' : 'orange' %>">statut : <%= p.statut %></span></p>
 </div>
 
+<div class="carte">
+  <h2 style="margin-top:0;">Pièces jointes</h2>
+  <% if (!pieces.length) { %><p style="color:var(--gris)">Aucune pièce jointe.</p><% } %>
+  <% pieces.forEach(pj => { %>
+    <p>📎 <a href="/fichiers/<%= pj.id %>"><%= pj.nom_original %></a>
+      <small style="color:var(--gris)">(<%= Math.round((pj.taille||0)/1024) %> Ko, <%= pj.televerse_par==='public' ? 'joint par le plaignant' : 'téléversé par ' + pj.televerse_par %>, le <%= pj.horodatage %>)</small></p>
+  <% }) %>
+  <form class="no-print" method="post" action="/plaintes/<%= p.id %>/pieces" enctype="multipart/form-data" style="display:flex;gap:.5rem;align-items:center;margin-top:.5rem;">
+    <input type="file" name="fichiers" multiple accept=".jpg,.jpeg,.png,.webp,.gif,.heic,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt" required>
+    <button class="bouton mini" type="submit">Ajouter</button>
+  </form>
+</div>
+
 <% if (incident) { %>
 <div class="carte">
   <h2 style="margin-top:0;">Incident lié</h2>
