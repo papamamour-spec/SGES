@@ -78,4 +78,4 @@ Traçabilité entre le cahier des charges CDC-SGES-EDK-2026-01 et la présente v
 
 ## Cas d'usage imposé (§16.2)
 
-Le scénario de démonstration est pré-chargé par le seed : incident de déversement à la station de Kaolack (déclaré terrain, DG notifiée à H+1h28), analyse par arbre des causes, deux actions correctives, plainte riveraine PL-2026-0001 déposée via le formulaire public et reliée à l'incident, notification IFC générable depuis la fiche incident, et remontée au tableau de bord Groupe et au rapport annuel.
+Le scénario de démonstration est disponible via `npm run seed:demo` (sur base vide, jamais chargé automatiquement en production) : incident de déversement à la station de Kaolack (déclaré terrain, DG notifiée à H+1h28), analyse par arbre des causes, deux actions correctives, plainte riveraine PL-2026-0001 déposée via le formulaire public et reliée à l'incident, notification IFC générable depuis la fiche incident, et remontée au tableau de bord Groupe et au rapport annuel. En production, la base démarre vide avec le seul compte administrateur.

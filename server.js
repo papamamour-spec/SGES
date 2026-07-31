@@ -7,8 +7,9 @@ const { seedIfEmpty } = require('./src/seed');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Initialisation automatique de la base au premier démarrage (déploiement cloud)
-if (seedIfEmpty()) console.log('Base initialisée avec le périmètre EDK et les données de démonstration.');
+// Initialisation automatique au premier démarrage : compte administrateur seul
+// (la base métier démarre vide ; jeu de démonstration via `npm run seed:demo`)
+seedIfEmpty();
 
 // Helpers d'affichage disponibles dans toutes les vues :
 // L() = libellé français d'un code interne, LA() = variante audits, fdate() = date JJ/MM/AAAA

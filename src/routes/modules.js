@@ -420,8 +420,11 @@ router.get('/admin', requireRole('admin', 'es_groupe'), (req, res) => {
   const users = db.prepare(`SELECT u.*, e.nom entite_nom, s.nom site_nom FROM users u
     LEFT JOIN entites e ON e.id=u.entite_id LEFT JOIN sites s ON s.id=u.site_id ORDER BY u.actif DESC, u.nom`).all();
   const notifications = db.prepare('SELECT * FROM notifications ORDER BY id DESC LIMIT 100').all();
+  const entitesAll = db.prepare('SELECT * FROM entites ORDER BY actif DESC, type DESC, nom').all();
+  const sitesAll = db.prepare(`SELECT s.*, e.nom entite_nom FROM sites s JOIN entites e ON e.id=s.entite_id
+    ORDER BY s.actif DESC, e.nom, s.nom`).all();
   res.render('admin', {
-    users, entites: entites(), sites: sites(), notifications,
+    users, entites: entites(), sites: sites(), entitesAll, sitesAll, notifications,
     roles: ROLES, mailConfigure: mailer.apiConfiguree(),
     message: req.query.msg || null, erreur: req.query.err || null,
   });
@@ -478,6 +481,71 @@ router.post('/admin/utilisateurs/:id', requireRole('admin'), (req, res) => {
       b.password ? bcrypt.hashSync(b.password, 10) : null, cible.id);
   logAudit(req.session.user, 'modification', 'utilisateur', cible.id, `${cible.email}${details.length ? ' : ' + details.join(', ') : ''}`);
   res.redirect('/admin?msg=' + encodeURIComponent(`Compte ${cible.email} mis à jour.`));
+});
+
+// Référentiel des entités (l'administrateur construit le périmètre organisationnel)
+router.post('/admin/entites', requireRole('admin'), (req, res) => {
+  const b = req.body;
+  if (!b.code || !b.nom) return res.redirect('/admin?err=' + encodeURIComponent('Code et nom de l’entité obligatoires.'));
+  if (db.prepare('SELECT 1 FROM entites WHERE code=?').get(b.code.trim().toUpperCase())) {
+    return res.redirect('/admin?err=' + encodeURIComponent('Ce code d’entité existe déjà.'));
+  }
+  const r = db.prepare('INSERT INTO entites (code, nom, type, profil_risque) VALUES (?,?,?,?)')
+    .run(b.code.trim().toUpperCase(), b.nom.trim(), b.type === 'holding' ? 'holding' : 'filiale', b.profil_risque || null);
+  logAudit(req.session.user, 'creation', 'entite', r.lastInsertRowid, b.nom);
+  res.redirect('/admin?msg=' + encodeURIComponent(`Entité ${b.nom} créée.`));
+});
+router.post('/admin/entites/:id/actif', requireRole('admin'), (req, res) => {
+  const actif = req.body.actif === '1' ? 1 : 0;
+  db.prepare('UPDATE entites SET actif=? WHERE id=?').run(actif, req.params.id);
+  logAudit(req.session.user, actif ? 'modification' : 'desactivation', 'entite', req.params.id, actif ? 'réactivation' : null);
+  res.redirect('/admin');
+});
+
+// Référentiel des sites
+router.post('/admin/sites', requireRole('admin'), (req, res) => {
+  const b = req.body;
+  if (!b.entite_id || !b.code || !b.nom || !b.type) return res.redirect('/admin?err=' + encodeURIComponent('Entité, code, nom et type du site obligatoires.'));
+  if (db.prepare('SELECT 1 FROM sites WHERE code=?').get(b.code.trim().toUpperCase())) {
+    return res.redirect('/admin?err=' + encodeURIComponent('Ce code de site existe déjà.'));
+  }
+  const r = db.prepare('INSERT INTO sites (entite_id, code, nom, type, pays, ville) VALUES (?,?,?,?,?,?)')
+    .run(b.entite_id, b.code.trim().toUpperCase(), b.nom.trim(), b.type, b.pays || 'Sénégal', b.ville || null);
+  logAudit(req.session.user, 'creation', 'site', r.lastInsertRowid, b.nom);
+  res.redirect('/admin?msg=' + encodeURIComponent(`Site ${b.nom} créé.`));
+});
+router.post('/admin/sites/:id/actif', requireRole('admin'), (req, res) => {
+  const actif = req.body.actif === '1' ? 1 : 0;
+  db.prepare('UPDATE sites SET actif=? WHERE id=?').run(actif, req.params.id);
+  logAudit(req.session.user, actif ? 'modification' : 'desactivation', 'site', req.params.id, actif ? 'réactivation' : null);
+  res.redirect('/admin');
+});
+
+// Réinitialisation de production : purge toutes les données métier et tous les
+// comptes sauf l'administrateur connecté. La piste d'audit et les facteurs
+// d'émission (configuration) sont conservés. Confirmation textuelle exigée.
+const TABLES_METIER = ['pieces_jointes', 'notifications', 'plaintes', 'incidents', 'actions', 'non_conformites', 'audits',
+  'consommations', 'dechets', 'effectifs', 'permis', 'exigences_legales', 'risques', 'politiques', 'documents',
+  'formations', 'habilitations', 'equipements_securite', 'exercices_urgence', 'interactions_pp', 'parties_prenantes',
+  'tiers', 'sites', 'entites'];
+router.post('/admin/purge', requireRole('admin'), (req, res) => {
+  if ((req.body.confirmation || '').trim().toUpperCase() !== 'REINITIALISER') {
+    return res.redirect('/admin?err=' + encodeURIComponent('Réinitialisation annulée : tapez REINITIALISER pour confirmer.'));
+  }
+  const fs = require('fs');
+  const fichiers = db.prepare('SELECT fichier FROM pieces_jointes').all();
+  const purge = db.transaction(() => {
+    // Les comptes référencent entités et sites : ils sont supprimés d'abord,
+    // puis le compte conservé est détaché de son rattachement.
+    db.prepare('DELETE FROM users WHERE id != ?').run(req.session.user.id);
+    db.prepare('UPDATE users SET entite_id=NULL, site_id=NULL WHERE id=?').run(req.session.user.id);
+    TABLES_METIER.forEach((t) => db.prepare(`DELETE FROM ${t}`).run());
+  });
+  purge();
+  fichiers.forEach((f) => { try { fs.unlinkSync(path.join(UPLOAD_DIR, f.fichier)); } catch (e) { /* déjà absent */ } });
+  logAudit(req.session.user, 'desactivation', 'base', null,
+    `RÉINITIALISATION DE PRODUCTION : données métier purgées, comptes supprimés sauf ${req.session.user.email}`);
+  res.redirect('/admin?msg=' + encodeURIComponent('Réinitialisation effectuée : la base est vide, votre compte administrateur est conservé. Créez les entités, les sites puis les comptes.'));
 });
 
 // E-mail de test de la configuration Brevo
