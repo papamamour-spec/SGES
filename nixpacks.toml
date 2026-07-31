@@ -1,0 +1,7 @@
+# Build Railway/Nixpacks : Node 22 (binaires précompilés better-sqlite3 disponibles)
+# + chaîne de compilation en secours si node-gyp devait reconstruire le module natif.
+[phases.setup]
+nixPkgs = ["nodejs_22", "python3", "gcc", "gnumake"]
+
+[start]
+cmd = "npm start"
