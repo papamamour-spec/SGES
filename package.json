@@ -1,0 +1,23 @@
+{
+  "name": "sges-edk",
+  "version": "1.0.0",
+  "description": "Plateforme SGES centralisée du Groupe EDK — Système de Gestion Environnementale et Sociale (PAES IFC n°50059, action n°2)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "seed": "node src/seed.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/papamamour-spec/SGES"
+  },
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^13.0.2",
+    "ejs": "^6.0.1",
+    "express": "^5.2.1",
+    "express-session": "^1.19.0"
+  }
+}

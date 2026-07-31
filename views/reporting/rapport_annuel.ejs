@@ -1,0 +1,72 @@
+<%- include('../partials/header', { titre: 'Rapport annuel ' + annee }) %>
+<div class="no-print" style="margin-bottom:1rem;">
+  <button onclick="window.print()">Imprimer / exporter en PDF</button>
+  <a class="bouton secondaire" href="/reporting">Retour</a>
+</div>
+
+<div class="carte">
+  <h1 style="font-size:1.6rem;">Rapport annuel de suivi environnemental et social — <%= annee %></h1>
+  <p class="sous-titre">Groupe EDK SA · Investment IFC n°50059 · Annual Monitoring Report généré par la Plateforme SGES le <%= genereLe %></p>
+
+  <h2>1. Périmètre et activités</h2>
+  <p>Le périmètre consolidé couvre <b><%= nbEntites %> filiales opérationnelles</b> et <b><%= nbSites %> sites actifs</b> (Sénégal, Guinée, Gambie),
+  pilotés par la holding Groupe EDK SA. Effectif consolidé sur la dernière période déclarée : <b><%= effectifs.total || '—' %></b> salariés
+  (dont <%= effectifs.femmes || 0 %> femmes, <%= effectifs.cdi || 0 %> CDI, <%= effectifs.st || 0 %> travailleurs sous-traités).</p>
+
+  <h2>2. État d'avancement du PAES</h2>
+  <div class="table-scroll"><table>
+    <tr><th>Réf.</th><th>Action</th><th>Échéance</th><th>Statut</th><th>Preuve</th></tr>
+    <% paes.forEach(a => { %>
+      <tr><td><b><%= a.ref_paes %></b></td><td><%= a.description %></td><td><%= a.echeance %></td>
+        <td><span class="badge <%= a.statut==='cloturee' ? 'vert' : 'orange' %>"><%= a.statut %></span></td>
+        <td style="font-size:.8rem;"><%= a.preuve || '—' %></td></tr>
+    <% }) %>
+  </table></div>
+
+  <h2>3. Performance santé-sécurité</h2>
+  <div class="table-scroll"><table>
+    <tr><th>Heures travaillées</th><th>AT avec arrêt</th><th>AT sans arrêt</th><th>Presque-accidents</th><th>Jours d'arrêt</th><th>Décès</th><th>TF (LTIFR)</th><th>TG</th><th>TRIR</th></tr>
+    <tr><td><%= sst.heures.toLocaleString('fr-FR') %></td><td><%= sst.at_arret %></td><td><%= sst.at_sans_arret %></td>
+      <td><%= sst.presque_accidents %></td><td><%= sst.jours_arret %></td><td><%= sst.deces %></td>
+      <td><b><%= sst.tf ?? '—' %></b></td><td><b><%= sst.tg ?? '—' %></b></td><td><b><%= sst.trir ?? '—' %></b></td></tr>
+  </table></div>
+
+  <h2>4. Performance environnementale</h2>
+  <p>Émissions de gaz à effet de serre (GHG Protocol) : scope 1 = <b><%= ges.scope1 %> tCO₂e</b>, scope 2 = <b><%= ges.scope2 %> tCO₂e</b>,
+  total = <b><%= ges.total %> tCO₂e</b>.</p>
+  <% if (dechets.length) { %>
+  <div class="table-scroll"><table>
+    <tr><th>Flux de déchets</th><th>Quantité (kg)</th></tr>
+    <% dechets.forEach(d => { %><tr><td><%= d.flux %></td><td><%= d.kg.toLocaleString('fr-FR') %></td></tr><% }) %>
+  </table></div>
+  <% } %>
+
+  <h2>5. Incidents significatifs et enseignements</h2>
+  <% if (!incidentsSign.length) { %><p>Aucun incident significatif (gravité ≥ 4) sur la période.</p><% } %>
+  <% incidentsSign.forEach(i => { %>
+    <p><b><%= i.date_evenement %> — <%= i.site_nom %></b> (<%= i.type %>, gravité <%= i.gravite %>/5) : <%= i.description %>
+    <% if (i.cause_racine) { %><br><i>Cause racine (<%= i.methode_analyse %>) : <%= i.cause_racine %></i><% } %></p>
+  <% }) %>
+
+  <h2>6. Bilan du mécanisme de plaintes</h2>
+  <p><%= plaintes.total || 0 %> plainte(s) reçue(s) (<%= plaintes.externes || 0 %> externes, <%= plaintes.internes || 0 %> internes,
+  dont <%= plaintes.sensibles || 0 %> sensible(s) traitée(s) en circuit confidentiel) ;
+  <%= plaintes.resolues || 0 %> résolue(s) ; délai moyen de traitement : <%= plaintes.delai_moyen ?? '—' %> jours.</p>
+
+  <h2>7. Conformité réglementaire</h2>
+  <p><%= permis.length %> permis et autorisations suivis ; <%= permis.filter(p => p.jours !== null && p.jours < 0).length %> expiré(s) ;
+  <%= permis.filter(p => p.alerte && p.jours >= 0).length %> en alerte d'échéance.
+  Exigences légales et covenants évalués : <%= exigences.length %>, dont <%= exigences.filter(e => e.statut_conformite==='conforme').length %> conformes.
+  Non-conformités : <%= nc.total || 0 %> enregistrées, <%= nc.closes || 0 %> vérifiées closes.</p>
+
+  <h2>8. Capacité organisationnelle et formation</h2>
+  <p><%= formations.sessions %> session(s) de formation E&amp;S/SST, <%= formations.participants %> participants,
+  <%= Math.round(formations.heures) %> heures-stagiaires dispensées.</p>
+
+  <h2>9. Programme de travail de l'année suivante</h2>
+  <p>Poursuite du déploiement du SGES : clôture des actions PAES restantes, extension de la couverture terrain,
+  intégrations SIRH/ERP et automatisation complète du reporting (lots 3 à 5 du projet Plateforme).</p>
+
+  <p style="color:var(--gris);font-size:.8rem;">Chaque donnée de ce rapport est traçable jusqu'à sa saisie d'origine dans la Plateforme (exigence d'auditabilité §6.8). Génération journalisée dans la piste d'audit.</p>
+</div>
+<%- include('../partials/footer') %>

@@ -1,0 +1,45 @@
+<%- include('../partials/header', { titre: 'Déposer une plainte' }) %>
+<div class="carte" style="max-width:720px;margin:1.5rem auto;">
+  <h1>Déposer une plainte ou une doléance</h1>
+  <p class="sous-titre">Formulaire public — aucun compte n'est nécessaire. Un code de suivi vous sera remis.</p>
+  <% if (erreur) { %><div class="alerte"><%= erreur %></div><% } %>
+  <form method="post" action="/plainte">
+    <div class="champs-2">
+      <div class="champ"><label>Vous êtes</label>
+        <select name="mecanisme">
+          <option value="externe">Riverain, client, membre de la communauté</option>
+          <option value="interne">Travailleur du Groupe EDK ou d'un sous-traitant</option>
+        </select></div>
+      <div class="champ"><label>Site concerné (si connu)</label>
+        <select name="site_id"><option value="">Je ne sais pas</option>
+          <% sites.forEach(s => { %><option value="<%= s.id %>"><%= s.nom %> — <%= s.pays %></option><% }) %>
+        </select></div>
+    </div>
+    <div class="champ"><label>Nature de la plainte</label>
+      <select name="nature">
+        <option value="nuisance">Nuisance (bruit, odeur, poussière)</option>
+        <option value="pollution">Pollution ou atteinte à l'environnement</option>
+        <option value="securite">Sécurité des personnes ou des biens</option>
+        <option value="conditions_travail">Conditions de travail</option>
+        <option value="harcelement">Harcèlement</option>
+        <option value="vbg">Violences basées sur le genre</option>
+        <option value="travail_enfants">Travail des enfants</option>
+        <option value="discrimination">Discrimination</option>
+        <option value="autre">Autre</option>
+      </select>
+      <small style="color:var(--gris)">Les plaintes de harcèlement, violences, discrimination ou travail des enfants sont orientées automatiquement vers un circuit confidentiel restreint.</small>
+    </div>
+    <div class="champ"><label>Description des faits *</label><textarea name="description" required placeholder="Décrivez ce qui s'est passé, où et quand."></textarea></div>
+    <div class="champ"><label>Mode de dépôt</label>
+      <select name="mode" onchange="document.getElementById('coord').style.display = this.value==='anonyme' ? 'none' : 'grid'">
+        <option value="confidentiel">Confidentiel (vos coordonnées ne sont visibles que de l'équipe de traitement)</option>
+        <option value="anonyme">Anonyme (aucune coordonnée enregistrée)</option>
+      </select></div>
+    <div class="champs-2" id="coord">
+      <div class="champ"><label>Votre nom</label><input name="nom"></div>
+      <div class="champ"><label>Téléphone ou e-mail</label><input name="contact"></div>
+    </div>
+    <button type="submit">Envoyer ma plainte</button>
+  </form>
+</div>
+<%- include('../partials/footer') %>

@@ -1,0 +1,53 @@
+<%- include('partials/header', { titre: 'Incidents SST' }) %>
+<h1>Module 10 — Santé, sécurité au travail et incidents</h1>
+<p class="sous-titre">Déclaration rapide depuis le terrain, notification automatique DG si gravité ≥ 4 (EF-SST-01/03/04)</p>
+
+<details class="form-ajout" open><summary>+ Déclarer un événement</summary><div>
+  <form method="post" action="/incidents">
+    <div class="champs-3">
+      <div class="champ"><label>Site *</label><select name="site_id" required><% sites.forEach(s => { %><option value="<%= s.id %>"><%= s.nom %></option><% }) %></select></div>
+      <div class="champ"><label>Type *</label>
+        <select name="type">
+          <option value="AT_arret">Accident du travail avec arrêt</option>
+          <option value="AT_sans_arret">Accident du travail sans arrêt</option>
+          <option value="trajet">Accident de trajet</option>
+          <option value="presque_accident" selected>Presque-accident</option>
+          <option value="situation_dangereuse">Situation dangereuse</option>
+          <option value="environnement">Incident environnemental</option>
+          <option value="surete">Incident de sûreté</option>
+          <option value="sanitaire">Incident sanitaire</option>
+          <option value="tiers">Incident impliquant un tiers / communauté</option>
+        </select></div>
+      <div class="champ"><label>Gravité (1–5) — ≥ 4 notifie la DG *</label><input type="number" name="gravite" min="1" max="5" value="2" required></div>
+      <div class="champ"><label>Date et heure *</label><input type="datetime-local" name="date_evenement" required></div>
+      <div class="champ"><label>Jours d'arrêt</label><input type="number" name="jours_arret" value="0" min="0"></div>
+      <div class="champ"><label>Décès</label><input type="number" name="deces" value="0" min="0"></div>
+      <div class="champ"><label>Latitude (GPS)</label><input name="lat" placeholder="14.152"></div>
+      <div class="champ"><label>Longitude (GPS)</label><input name="lng" placeholder="-16.072"></div>
+      <div class="champ"><label>Déclarant</label><input name="declarant" placeholder="par défaut : vous"></div>
+    </div>
+    <div class="champ"><label>Description *</label><textarea name="description" required></textarea></div>
+    <div class="champs-2">
+      <div class="champ"><label>Mesures immédiates</label><textarea name="mesures_immediates"></textarea></div>
+      <div class="champ"><label>Autorités notifiées</label><textarea name="autorites_notifiees"></textarea></div>
+    </div>
+    <button type="submit">Déclarer</button>
+  </form>
+</div></details>
+
+<div class="table-scroll"><table>
+  <tr><th>Date</th><th>Site</th><th>Type</th><th>Gravité</th><th>Description</th><th>DG notifiée</th><th>Statut</th></tr>
+  <% rows.forEach(i => { %>
+    <tr>
+      <td><%= i.date_evenement %></td>
+      <td><%= i.site_nom %><br><small style="color:var(--gris)"><%= i.entite_nom %></small></td>
+      <td><%= i.type %></td>
+      <td><span class="badge <%= i.gravite>=4 ? 'rouge' : i.gravite===3 ? 'orange' : 'vert' %>"><%= i.gravite %>/5</span></td>
+      <td><a href="/incidents/<%= i.id %>"><%= i.description.slice(0,90) %><%= i.description.length>90 ? '…' : '' %></a></td>
+      <td><%= i.notifie_dg_le ? i.notifie_dg_le : '—' %></td>
+      <td><span class="badge <%= i.statut==='clos' ? 'vert' : 'orange' %>"><%= i.statut %></span></td>
+    </tr>
+  <% }) %>
+</table></div>
+<p class="no-print"><a class="bouton secondaire" href="/export/incidents.csv">Exporter en CSV</a></p>
+<%- include('partials/footer') %>

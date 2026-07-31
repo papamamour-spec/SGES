@@ -1,0 +1,16 @@
+<%- include('partials/header', { titre: 'Connexion' }) %>
+<div class="carte" style="max-width:420px;margin:3rem auto;">
+  <h1>Connexion à la Plateforme SGES</h1>
+  <p class="sous-titre">Système de Gestion Environnementale et Sociale du Groupe EDK</p>
+  <% if (erreur) { %><div class="alerte"><%= erreur %></div><% } %>
+  <form method="post" action="/login">
+    <div class="champ"><label>Adresse e-mail</label><input type="email" name="email" required autofocus></div>
+    <div class="champ"><label>Mot de passe</label><input type="password" name="password" required></div>
+    <button type="submit">Se connecter</button>
+  </form>
+  <p style="font-size:.78rem;color:var(--gris);margin-top:1rem;">
+    Comptes de démonstration (mot de passe : <code>edk2026</code>) : admin@edk.sn, es.groupe@edk.sn, es.oil@edk.sn,
+    site.yoff@edk.sn, dg@edk.sn, audit@edk.sn, ifc@edk.sn, plaintes.sensibles@edk.sn
+  </p>
+</div>
+<%- include('partials/footer') %>

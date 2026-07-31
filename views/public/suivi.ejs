@@ -1,0 +1,19 @@
+<%- include('../partials/header', { titre: 'Suivi de plainte' }) %>
+<div class="carte" style="max-width:600px;margin:2rem auto;">
+  <h1>Suivre ma plainte</h1>
+  <form method="get" action="/suivi" style="display:flex;gap:.5rem;margin-bottom:1rem;">
+    <input name="code" value="<%= code %>" placeholder="Code de suivi (ex. PL-2026-0001)" required>
+    <button type="submit">Rechercher</button>
+  </form>
+  <% if (introuvable) { %><div class="alerte">Aucune plainte trouvée pour ce code. Vérifiez la saisie.</div><% } %>
+  <% if (plainte) { %>
+    <div class="info">
+      <p><b>Code :</b> <%= plainte.code_suivi %></p>
+      <p><b>Déposée le :</b> <%= plainte.date_depot %> · <b>Accusé de réception :</b> <%= plainte.date_accuse || '—' %></p>
+      <p><b>Statut :</b> <span class="badge <%= ['resolue','close'].includes(plainte.statut) ? 'vert' : 'orange' %>"><%= plainte.statut %></span></p>
+      <% if (plainte.resolution) { %><p><b>Résolution proposée :</b> <%= plainte.resolution %></p><% } %>
+    </div>
+  <% } %>
+  <p><a href="/">Retour à l'accueil</a></p>
+</div>
+<%- include('../partials/footer') %>

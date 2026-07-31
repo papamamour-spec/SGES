@@ -1,0 +1,44 @@
+<%- include('../partials/header', { titre: 'Notification IFC' }) %>
+<div class="no-print" style="margin-bottom:1rem;">
+  <button onclick="window.print()">Imprimer / exporter en PDF</button>
+  <a class="bouton secondaire" href="/incidents/<%= i.id %>">Retour à l'incident</a>
+</div>
+
+<div class="carte">
+  <h1 style="font-size:1.5rem;">Notification d'incident — IFC Investment n°50059</h1>
+  <p class="sous-titre">Groupe EDK SA · document généré par la Plateforme SGES le <%= genereLe %> · réf. interne INC-<%= i.id %></p>
+
+  <h2>1. Description factuelle</h2>
+  <p><b>Type d'événement :</b> <%= i.type %> · <b>Gravité :</b> <%= i.gravite %>/5</p>
+  <p><b>Date et heure :</b> <%= i.date_evenement %></p>
+  <p><b>Lieu :</b> <%= i.site_nom %>, <%= i.ville || '' %> (<%= i.pays %>) — entité <%= i.entite_nom %>
+  <% if (i.lat && i.lng) { %> · coordonnées GPS : <%= i.lat %>, <%= i.lng %><% } %></p>
+  <p><%= i.description %></p>
+
+  <h2>2. Conséquences</h2>
+  <p><b>Humaines :</b> <%= i.deces %> décès, <%= i.jours_arret %> jour(s) d'arrêt de travail.</p>
+  <p><b>Environnementales et matérielles :</b> voir description et analyse en cours.</p>
+
+  <h2>3. Mesures immédiates</h2>
+  <p><%= i.mesures_immediates || 'En cours de consolidation.' %></p>
+
+  <h2>4. Autorités notifiées</h2>
+  <p><%= i.autorites_notifiees || 'Aucune notification externe requise à ce stade.' %></p>
+
+  <h2>5. Plan d'investigation</h2>
+  <p><b>Méthode :</b> <%= i.methode_analyse || 'à déterminer' %>
+  <% if (i.cause_racine) { %> · <b>Cause racine identifiée :</b> <%= i.cause_racine %><% } %></p>
+  <% if (actions.length) { %>
+    <p><b>Actions correctives engagées :</b></p>
+    <% actions.forEach(a => { %><p>• <%= a.description %> (responsable : <%= a.responsable || '—' %>, échéance : <%= a.echeance || '—' %>, statut : <%= a.statut %>)</p><% }) %>
+  <% } %>
+
+  <% if (plaintesLiees.length) { %>
+  <h2>6. Plaintes de parties prenantes liées</h2>
+  <% plaintesLiees.forEach(p => { %><p>• <%= p.code_suivi %> — <%= p.nature || '—' %>, déposée le <%= p.date_depot %>, statut : <%= p.statut %></p><% }) %>
+  <% } %>
+
+  <p><b>Notification interne DG/holding :</b> <%= i.notifie_dg_le || 'non requise (gravité < seuil)' %></p>
+  <p style="color:var(--gris);font-size:.8rem;">Les délais contractuels de notification et la définition d'un incident significatif sont paramétrés selon la convention de prêt (§8.2 du cahier des charges).</p>
+</div>
+<%- include('../partials/footer') %>

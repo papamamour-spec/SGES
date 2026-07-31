@@ -1,0 +1,24 @@
+<%- include('partials/header', { titre: 'Administration' }) %>
+<h1>Administration</h1>
+<p class="sous-titre">Rôles et habilitations (§6.3) · <a href="/admin/journal">Consulter la piste d'audit</a></p>
+
+<div class="carte">
+  <h2 style="margin-top:0;">Utilisateurs et rôles</h2>
+  <div class="table-scroll"><table>
+    <tr><th>Nom</th><th>E-mail</th><th>Rôle</th><th>Entité</th><th>Site</th><th>État</th></tr>
+    <% users.forEach(u => { %>
+      <tr>
+        <td><%= u.nom %></td><td><%= u.email %></td>
+        <td><span class="badge <%= u.role==='ifc' ? 'violet' : u.role==='plaintes_sensibles' ? 'rouge' : 'vert' %>"><%= u.role %></span></td>
+        <td><%= u.entite_nom || '—' %></td><td><%= u.site_nom || '—' %></td>
+        <td><span class="badge <%= u.actif ? 'vert' : 'gris' %>"><%= u.actif ? 'actif' : 'désactivé' %></span></td>
+      </tr>
+    <% }) %>
+  </table></div>
+  <p style="font-size:.8rem;color:var(--gris);">
+    Rôles livrés : administrateur fonctionnel, responsable E&amp;S Groupe, responsable E&amp;S filiale, correspondant site,
+    auditeur interne, direction générale (lecture), consultation externe IFC (lecture, périmètre restreint, consultations journalisées),
+    gestionnaire de plaintes sensibles (circuit confidentiel étanche).
+  </p>
+</div>
+<%- include('partials/footer') %>

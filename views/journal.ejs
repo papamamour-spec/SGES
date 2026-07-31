@@ -1,0 +1,16 @@
+<%- include('partials/header', { titre: "Piste d'audit" }) %>
+<h1>Piste d'audit</h1>
+<p class="sous-titre">Journal inaltérable des opérations : créations, modifications, consultations sensibles, exports, connexions (§6.3 / 6.8). Aucune suppression physique de données.</p>
+
+<div class="table-scroll"><table>
+  <tr><th>Horodatage (UTC)</th><th>Utilisateur</th><th>Action</th><th>Objet</th><th>Détails</th></tr>
+  <% rows.forEach(l => { %>
+    <tr>
+      <td><%= l.horodatage %></td><td><%= l.user_email %></td>
+      <td><span class="badge <%= l.action==='consultation_sensible' ? 'rouge' : l.action==='export' ? 'violet' : 'gris' %>"><%= l.action %></span></td>
+      <td><%= l.objet %><%= l.objet_id ? ' #' + l.objet_id : '' %></td>
+      <td style="font-size:.8rem;"><%= l.details || '—' %></td>
+    </tr>
+  <% }) %>
+</table></div>
+<%- include('partials/footer') %>

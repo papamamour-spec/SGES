@@ -1,0 +1,11 @@
+<%- include('../partials/header', { titre: 'Plainte enregistrée' }) %>
+<div class="carte" style="max-width:600px;margin:2rem auto;text-align:center;">
+  <h1>Votre plainte a bien été enregistrée</h1>
+  <div class="info" style="text-align:left;">Accusé de réception émis et horodaté automatiquement (EF-PLA-03).</div>
+  <p>Conservez précieusement votre code de suivi :</p>
+  <p style="font-size:1.8rem;font-weight:700;letter-spacing:2px;color:var(--vert-fonce);"><%= code %></p>
+  <p>Vous pouvez suivre l'avancement du traitement à tout moment, sans créer de compte.</p>
+  <a class="bouton" href="/suivi?code=<%= code %>">Suivre ma plainte</a>
+  <a class="bouton secondaire" href="/">Retour à l'accueil</a>
+</div>
+<%- include('../partials/footer') %>

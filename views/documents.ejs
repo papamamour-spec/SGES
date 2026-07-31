@@ -1,0 +1,48 @@
+<%- include('partials/header', { titre: 'Documents' }) %>
+<h1>Module 20 — Gestion documentaire</h1>
+<p class="sous-titre">Bibliothèque E&amp;S structurée, cycle de vie et alerte de révision ; les documents retirés ou archivés ne doivent plus être utilisés (EF-DOC-01/02/03)</p>
+
+<form method="get" class="no-print" style="margin-bottom:1rem;display:flex;gap:.5rem;">
+  <input name="q" value="<%= q %>" placeholder="Recherche (titre, mots-clés, typologie)" style="max-width:340px;">
+  <button type="submit">Rechercher</button>
+</form>
+
+<details class="form-ajout"><summary>+ Nouveau document</summary><div>
+  <form method="post" action="/documents">
+    <div class="champs-3">
+      <div class="champ"><label>Titre *</label><input name="titre" required></div>
+      <div class="champ"><label>Typologie *</label>
+        <select name="typologie"><option>procédure</option><option>politique</option><option>EIES</option><option>plan d'urgence</option><option>rapport</option><option>permis</option><option>preuve</option></select></div>
+      <div class="champ"><label>Version</label><input name="version" value="1.0"></div>
+      <div class="champ"><label>Entité</label><select name="entite_id"><option value="">Groupe</option><% entites.forEach(e => { %><option value="<%= e.id %>"><%= e.nom %></option><% }) %></select></div>
+      <div class="champ"><label>Site</label><select name="site_id"><option value="">—</option><% sites.forEach(s => { %><option value="<%= s.id %>"><%= s.nom %></option><% }) %></select></div>
+      <div class="champ"><label>Échéance de révision</label><input type="date" name="date_revision"></div>
+    </div>
+    <div class="champ"><label>Mots-clés</label><input name="mots_cles"></div>
+    <button type="submit">Enregistrer</button>
+  </form>
+</div></details>
+
+<div class="table-scroll"><table>
+  <tr><th>Titre</th><th>Typologie</th><th>Périmètre</th><th>Version</th><th>Statut</th><th>Révision</th><th>Cycle de vie</th></tr>
+  <% rows.forEach(d => { %>
+    <tr>
+      <td><b><%= d.titre %></b><% if (d.mots_cles) { %><br><small style="color:var(--gris)"><%= d.mots_cles %></small><% } %></td>
+      <td><span class="badge gris"><%= d.typologie %></span></td>
+      <td><%= d.site_nom || d.entite_nom || 'Groupe' %></td><td>v<%= d.version %></td>
+      <td><span class="badge <%= d.statut==='diffuse' ? 'vert' : ['archive','retire'].includes(d.statut) ? 'gris' : 'orange' %>"><%= d.statut %></span></td>
+      <td><%= d.date_revision || '—' %></td>
+      <td>
+        <form class="inline" method="post" action="/documents/<%= d.id %>/statut">
+          <select name="statut" class="mini">
+            <% ['redaction','verification','approuve','diffuse','archive','retire'].forEach(s => { %>
+              <option value="<%= s %>" <%= d.statut===s ? 'selected' : '' %>><%= s %></option>
+            <% }) %>
+          </select>
+          <button class="bouton mini" type="submit">OK</button>
+        </form>
+      </td>
+    </tr>
+  <% }) %>
+</table></div>
+<%- include('partials/footer') %>
