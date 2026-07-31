@@ -1,5 +1,5 @@
 <%- include('partials/header', { titre: 'Risques' }) %>
-<h1>Module 2 — Registre des risques et impacts E&amp;S</h1>
+<h1>Module 2 : Registre des risques et impacts E&amp;S</h1>
 <p class="sous-titre">Cotation gravité × probabilité, risque brut et net, par entité, site et Norme de Performance (EF-RIS-01/03)</p>
 
 <div class="carte" style="display:flex;gap:2rem;flex-wrap:wrap;align-items:center;">
@@ -26,8 +26,8 @@
   <form method="post" action="/risques">
     <div class="champ"><label>Description *</label><textarea name="description" required></textarea></div>
     <div class="champs-3">
-      <div class="champ"><label>Entité</label><select name="entite_id"><option value="">—</option><% entites.forEach(e => { %><option value="<%= e.id %>"><%= e.nom %></option><% }) %></select></div>
-      <div class="champ"><label>Site</label><select name="site_id"><option value="">—</option><% sites.forEach(s => { %><option value="<%= s.id %>"><%= s.nom %></option><% }) %></select></div>
+      <div class="champ"><label>Entité</label><select name="entite_id"><option value="">N/A</option><% entites.forEach(e => { %><option value="<%= e.id %>"><%= e.nom %></option><% }) %></select></div>
+      <div class="champ"><label>Site</label><select name="site_id"><option value="">N/A</option><% sites.forEach(s => { %><option value="<%= s.id %>"><%= s.nom %></option><% }) %></select></div>
       <div class="champ"><label>Norme de Performance</label>
         <select name="ps"><% ['PS1','PS2','PS3','PS4','PS5','PS6','PS7','PS8'].forEach(ps => { %><option><%= ps %></option><% }) %></select></div>
       <div class="champ"><label>Catégorie</label><input name="categorie"></div>
@@ -50,9 +50,9 @@
       <td><b><%= r.description %></b><% if (r.justification_revision) { %><br><small style="color:var(--gris)">Dernière révision : <%= r.justification_revision %></small><% } %></td>
       <td><%= r.site_nom || r.entite_nom || 'Groupe' %></td>
       <td><span class="badge <%= brut>=15 ? 'rouge' : brut>=8 ? 'orange' : brut>=4 ? 'jaune' : 'vert' %>"><%= brut %></span></td>
-      <td><% if (net) { %><span class="badge <%= net>=15 ? 'rouge' : net>=8 ? 'orange' : net>=4 ? 'jaune' : 'vert' %>"><%= net %></span><% } else { %>—<% } %></td>
-      <td style="font-size:.8rem;"><%= r.mesures || '—' %></td>
-      <td><span class="badge <%= r.statut==='maitrise' ? 'vert' : r.statut==='clos' ? 'gris' : 'orange' %>"><%= r.statut %></span></td>
+      <td><% if (net) { %><span class="badge <%= net>=15 ? 'rouge' : net>=8 ? 'orange' : net>=4 ? 'jaune' : 'vert' %>"><%= net %></span><% } else { %>N/A<% } %></td>
+      <td style="font-size:.8rem;"><%= r.mesures || 'N/A' %></td>
+      <td><span class="badge <%= r.statut==='maitrise' ? 'vert' : r.statut==='clos' ? 'gris' : 'orange' %>"><%= L(r.statut) %></span></td>
       <td>
         <details><summary style="cursor:pointer;font-size:.8rem;">réviser</summary>
           <form method="post" action="/risques/<%= r.id %>/revision" style="min-width:180px;">

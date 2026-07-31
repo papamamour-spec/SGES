@@ -1,5 +1,5 @@
 <%- include('partials/header', { titre: 'Politiques' }) %>
-<h1>Module 1 — Politiques et gouvernance du SGES</h1>
+<h1>Module 1 : Politiques et gouvernance du SGES</h1>
 <p class="sous-titre">Hébergement, versionnage et cycle de validation des politiques E&amp;S (EF-GOV-01/02)</p>
 
 <details class="form-ajout"><summary>+ Nouvelle politique</summary><div>
@@ -22,14 +22,14 @@
   <tr><th>Titre</th><th>Thème</th><th>Périmètre</th><th>Version</th><th>Statut</th><th>Publication</th><th>Révision</th><th>Cycle de validation</th></tr>
   <% rows.forEach(p => { %>
     <tr>
-      <td><b><%= p.titre %></b></td><td><%= p.theme || '—' %></td><td><%= p.entite_nom || 'Groupe' %></td><td><%= p.version %></td>
-      <td><span class="badge <%= p.statut==='publiee' ? 'vert' : p.statut==='retiree' ? 'gris' : 'orange' %>"><%= p.statut %></span></td>
-      <td><%= p.date_publication || '—' %></td><td><%= p.date_revision || '—' %></td>
+      <td><b><%= p.titre %></b></td><td><%= p.theme || 'N/A' %></td><td><%= p.entite_nom || 'Groupe' %></td><td><%= p.version %></td>
+      <td><span class="badge <%= p.statut==='publiee' ? 'vert' : p.statut==='retiree' ? 'gris' : 'orange' %>"><%= L(p.statut) %></span></td>
+      <td><%= fdate(p.date_publication) %></td><td><%= fdate(p.date_revision) %></td>
       <td>
         <form class="inline" method="post" action="/politiques/<%= p.id %>/statut">
           <select name="statut" class="mini">
             <% ['redaction','revue','approuvee','publiee','retiree'].forEach(s => { %>
-              <option value="<%= s %>" <%= p.statut===s ? 'selected' : '' %>><%= s %></option>
+              <option value="<%= s %>" <%= p.statut===s ? 'selected' : '' %>><%= L(s) %></option>
             <% }) %>
           </select>
           <button class="bouton mini" type="submit">OK</button>

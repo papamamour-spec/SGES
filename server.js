@@ -10,6 +10,13 @@ const PORT = process.env.PORT || 3000;
 // Initialisation automatique de la base au premier démarrage (déploiement cloud)
 if (seedIfEmpty()) console.log('Base initialisée avec le périmètre EDK et les données de démonstration.');
 
+// Helpers d'affichage disponibles dans toutes les vues :
+// L() = libellé français d'un code interne, LA() = variante audits, fdate() = date JJ/MM/AAAA
+const { libelle, libelleAudit, fdate } = require('./src/helpers');
+app.locals.L = libelle;
+app.locals.LA = libelleAudit;
+app.locals.fdate = fdate;
+
 // Derrière le proxy TLS de l'hébergeur (Railway…) : cookie secure automatique
 app.set('trust proxy', 1);
 app.set('view engine', 'ejs');
@@ -47,4 +54,7 @@ app.use((err, req, res, next) => {
   res.status(500).render('erreur', { titre: 'Erreur interne', message: 'Une erreur est survenue. L’incident a été journalisé.' });
 });
 
-app.listen(PORT, () => console.log(`Plateforme SGES Groupe EDK — http://localhost:${PORT}`));
+// Alertes quotidiennes : échéances de permis (J-180…J-7) et actions en retard
+require('./src/mailer').lancerPlanificateur();
+
+app.listen(PORT, () => console.log(`Plateforme SGES Groupe EDK · http://localhost:${PORT}`));

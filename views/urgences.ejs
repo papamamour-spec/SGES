@@ -1,5 +1,5 @@
 <%- include('partials/header', { titre: 'Urgences' }) %>
-<h1>Module 6 — Préparation et réponse aux situations d'urgence</h1>
+<h1>Module 6 : Préparation et réponse aux situations d'urgence</h1>
 <p class="sous-titre">Équipements de sécurité et contrôles périodiques, exercices et simulations (EF-URG-03/04)</p>
 
 <h2>Équipements de sécurité</h2>
@@ -20,10 +20,10 @@
   <tr><th>Site</th><th>Type</th><th>Identifiant</th><th>Dernier contrôle</th><th>Prochain contrôle</th><th>État</th></tr>
   <% equipements.forEach(e => { %>
     <tr>
-      <td><%= e.site_nom %></td><td><%= e.type %></td><td><%= e.identifiant || '—' %></td><td><%= e.dernier_controle || '—' %></td>
-      <td><%= e.prochain_controle || '—' %>
+      <td><%= e.site_nom %></td><td><%= e.type %></td><td><%= e.identifiant || 'N/A' %></td><td><%= fdate(e.dernier_controle) %></td>
+      <td><%= fdate(e.prochain_controle) %>
         <% if (e.jours !== null && e.jours < 0) { %> <span class="badge rouge">en retard</span><% } else if (e.jours !== null && e.jours <= 30) { %> <span class="badge orange">J-<%= e.jours %></span><% } %></td>
-      <td><span class="badge <%= e.etat==='conforme' ? 'vert' : 'rouge' %>"><%= e.etat %></span></td>
+      <td><span class="badge <%= e.etat==='conforme' ? 'vert' : 'rouge' %>"><%= L(e.etat) %></span></td>
     </tr>
   <% }) %>
 </table></div>
@@ -44,7 +44,7 @@
 <div class="table-scroll"><table>
   <tr><th>Date</th><th>Site</th><th>Type</th><th>Participants</th><th>Compte rendu</th></tr>
   <% exercices.forEach(x => { %>
-    <tr><td><%= x.date_exercice %></td><td><%= x.site_nom %></td><td><b><%= x.type %></b></td><td><%= x.participants || '—' %></td><td><%= x.compte_rendu || '—' %></td></tr>
+    <tr><td><%= fdate(x.date_exercice) %></td><td><%= x.site_nom %></td><td><b><%= x.type %></b></td><td><%= x.participants || 'N/A' %></td><td><%= x.compte_rendu || 'N/A' %></td></tr>
   <% }) %>
 </table></div>
 <%- include('partials/footer') %>

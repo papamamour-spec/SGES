@@ -1,5 +1,5 @@
 <%- include('partials/header', { titre: 'Environnement' }) %>
-<h1>Module 11 — Ressources, pollution et empreinte environnementale (PS3)</h1>
+<h1>Module 11 : Ressources, pollution et empreinte environnementale (PS3)</h1>
 <p class="sous-titre">Consommations, inventaire GES (GHG Protocol, facteurs versionnés), déchets par flux (EF-ENV-01/02/03)</p>
 
 <div class="grille-kpi">
@@ -57,7 +57,7 @@
   <tr><th>Période</th><th>Site</th><th>Flux</th><th>Quantité (kg)</th><th>Filière</th><th>Prestataire</th><th>Bordereau</th></tr>
   <% dechets.forEach(d => { %>
     <tr><td><%= d.periode %></td><td><%= d.site_nom %></td><td><%= d.flux %></td><td><%= d.quantite_kg.toLocaleString('fr-FR') %></td>
-      <td><%= d.filiere || '—' %></td><td><%= d.prestataire || '—' %></td><td><%= d.bordereau || '—' %></td></tr>
+      <td><%= d.filiere || 'N/A' %></td><td><%= d.prestataire || 'N/A' %></td><td><%= d.bordereau || 'N/A' %></td></tr>
   <% }) %>
 </table></div>
 <p class="no-print"><a class="bouton secondaire" href="/export/consommations.csv">Exporter les consommations en CSV</a></p>

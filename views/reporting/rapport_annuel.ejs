@@ -5,21 +5,28 @@
 </div>
 
 <div class="carte">
-  <h1 style="font-size:1.6rem;">Rapport annuel de suivi environnemental et social — <%= annee %></h1>
-  <p class="sous-titre">Groupe EDK SA · Investment IFC n°50059 · Annual Monitoring Report généré par la Plateforme SGES le <%= genereLe %></p>
+  <h1 style="font-size:1.6rem;">Rapport annuel de suivi environnemental et social · <%= annee %></h1>
+  <p class="sous-titre">Groupe EDK SA · Investment IFC n°50059 · Annual Monitoring Report (AMR)</p>
+
+  <table class="doc-controle">
+    <tr><th>Référence du document</th><td>SGES-AMR-<%= annee %></td><th>Version</th><td>1.0</td></tr>
+    <tr><th>Date d'édition</th><td><%= genereLe %></td><th>Édité par</th><td><%= user ? user.nom : 'Plateforme SGES' %></td></tr>
+    <tr><th>Émetteur</th><td>Plateforme SGES · Groupe EDK SA</td><th>Classification</th><td>Confidentiel · diffusion restreinte (IFC)</td></tr>
+    <tr><th>Cadre de référence</th><td colspan="3">Normes de Performance IFC PS1 à PS8 · PAES action n°2 · structure PDCA compatible ISO 14001:2015 et ISO 45001:2018</td></tr>
+  </table>
 
   <h2>1. Périmètre et activités</h2>
   <p>Le périmètre consolidé couvre <b><%= nbEntites %> filiales opérationnelles</b> et <b><%= nbSites %> sites actifs</b> (Sénégal, Guinée, Gambie),
-  pilotés par la holding Groupe EDK SA. Effectif consolidé sur la dernière période déclarée : <b><%= effectifs.total || '—' %></b> salariés
+  pilotés par la holding Groupe EDK SA. Effectif consolidé sur la dernière période déclarée : <b><%= effectifs.total || 'N/A' %></b> salariés
   (dont <%= effectifs.femmes || 0 %> femmes, <%= effectifs.cdi || 0 %> CDI, <%= effectifs.st || 0 %> travailleurs sous-traités).</p>
 
   <h2>2. État d'avancement du PAES</h2>
   <div class="table-scroll"><table>
     <tr><th>Réf.</th><th>Action</th><th>Échéance</th><th>Statut</th><th>Preuve</th></tr>
     <% paes.forEach(a => { %>
-      <tr><td><b><%= a.ref_paes %></b></td><td><%= a.description %></td><td><%= a.echeance %></td>
-        <td><span class="badge <%= a.statut==='cloturee' ? 'vert' : 'orange' %>"><%= a.statut %></span></td>
-        <td style="font-size:.8rem;"><%= a.preuve || '—' %></td></tr>
+      <tr><td><b><%= a.ref_paes %></b></td><td><%= a.description %></td><td><%= fdate(a.echeance) %></td>
+        <td><span class="badge <%= a.statut==='cloturee' ? 'vert' : 'orange' %>"><%= L(a.statut) %></span></td>
+        <td style="font-size:.8rem;"><%= a.preuve || 'N/A' %></td></tr>
     <% }) %>
   </table></div>
 
@@ -28,7 +35,7 @@
     <tr><th>Heures travaillées</th><th>AT avec arrêt</th><th>AT sans arrêt</th><th>Presque-accidents</th><th>Jours d'arrêt</th><th>Décès</th><th>TF (LTIFR)</th><th>TG</th><th>TRIR</th></tr>
     <tr><td><%= sst.heures.toLocaleString('fr-FR') %></td><td><%= sst.at_arret %></td><td><%= sst.at_sans_arret %></td>
       <td><%= sst.presque_accidents %></td><td><%= sst.jours_arret %></td><td><%= sst.deces %></td>
-      <td><b><%= sst.tf ?? '—' %></b></td><td><b><%= sst.tg ?? '—' %></b></td><td><b><%= sst.trir ?? '—' %></b></td></tr>
+      <td><b><%= sst.tf ?? 'N/A' %></b></td><td><b><%= sst.tg ?? 'N/A' %></b></td><td><b><%= sst.trir ?? 'N/A' %></b></td></tr>
   </table></div>
 
   <h2>4. Performance environnementale</h2>
@@ -44,14 +51,14 @@
   <h2>5. Incidents significatifs et enseignements</h2>
   <% if (!incidentsSign.length) { %><p>Aucun incident significatif (gravité ≥ 4) sur la période.</p><% } %>
   <% incidentsSign.forEach(i => { %>
-    <p><b><%= i.date_evenement %> — <%= i.site_nom %></b> (<%= i.type %>, gravité <%= i.gravite %>/5) : <%= i.description %>
+    <p><b><%= fdate(i.date_evenement) %> · <%= i.site_nom %></b> (<%= L(i.type) %>, gravité <%= i.gravite %>/5) : <%= i.description %>
     <% if (i.cause_racine) { %><br><i>Cause racine (<%= i.methode_analyse %>) : <%= i.cause_racine %></i><% } %></p>
   <% }) %>
 
   <h2>6. Bilan du mécanisme de plaintes</h2>
   <p><%= plaintes.total || 0 %> plainte(s) reçue(s) (<%= plaintes.externes || 0 %> externes, <%= plaintes.internes || 0 %> internes,
   dont <%= plaintes.sensibles || 0 %> sensible(s) traitée(s) en circuit confidentiel) ;
-  <%= plaintes.resolues || 0 %> résolue(s) ; délai moyen de traitement : <%= plaintes.delai_moyen ?? '—' %> jours.</p>
+  <%= plaintes.resolues || 0 %> résolue(s) ; délai moyen de traitement : <%= plaintes.delai_moyen ?? 'N/A' %> jours.</p>
 
   <h2>7. Conformité réglementaire</h2>
   <p><%= permis.length %> permis et autorisations suivis ; <%= permis.filter(p => p.jours !== null && p.jours < 0).length %> expiré(s) ;

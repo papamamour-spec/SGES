@@ -5,17 +5,23 @@
 </div>
 
 <div class="carte">
-  <h1 style="font-size:1.5rem;">Notification d'incident — IFC Investment n°50059</h1>
-  <p class="sous-titre">Groupe EDK SA · document généré par la Plateforme SGES le <%= genereLe %> · réf. interne INC-<%= i.id %></p>
+  <h1 style="font-size:1.5rem;">Notification d'incident · IFC Investment n°50059</h1>
+  <p class="sous-titre">Groupe EDK SA · Plateforme SGES</p>
+
+  <table class="doc-controle">
+    <tr><th>Référence du document</th><td>SGES-NOT-<%= i.id %></td><th>Réf. incident</th><td>INC-<%= i.id %></td></tr>
+    <tr><th>Date d'édition</th><td><%= genereLe %></td><th>Édité par</th><td><%= user ? user.nom : 'Plateforme SGES' %></td></tr>
+    <tr><th>Émetteur</th><td>Groupe EDK SA (co-emprunteurs)</td><th>Classification</th><td>Confidentiel · destinataire IFC</td></tr>
+  </table>
 
   <h2>1. Description factuelle</h2>
   <% if (pieces.length) { %>
   <p><b>Pièces justificatives jointes :</b>
     <% pieces.forEach((pj, k) => { %><a href="/fichiers/<%= pj.id %>"><%= pj.nom_original %></a><%= k < pieces.length-1 ? ' · ' : '' %><% }) %></p>
   <% } %>
-  <p><b>Type d'événement :</b> <%= i.type %> · <b>Gravité :</b> <%= i.gravite %>/5</p>
-  <p><b>Date et heure :</b> <%= i.date_evenement %></p>
-  <p><b>Lieu :</b> <%= i.site_nom %>, <%= i.ville || '' %> (<%= i.pays %>) — entité <%= i.entite_nom %>
+  <p><b>Type d'événement :</b> <%= L(i.type) %> · <b>Gravité :</b> <%= i.gravite %>/5</p>
+  <p><b>Date et heure :</b> <%= fdate(i.date_evenement) %></p>
+  <p><b>Lieu :</b> <%= i.site_nom %>, <%= i.ville || '' %> (<%= i.pays %>) · entité <%= i.entite_nom %>
   <% if (i.lat && i.lng) { %> · coordonnées GPS : <%= i.lat %>, <%= i.lng %><% } %></p>
   <p><%= i.description %></p>
 
@@ -34,12 +40,12 @@
   <% if (i.cause_racine) { %> · <b>Cause racine identifiée :</b> <%= i.cause_racine %><% } %></p>
   <% if (actions.length) { %>
     <p><b>Actions correctives engagées :</b></p>
-    <% actions.forEach(a => { %><p>• <%= a.description %> (responsable : <%= a.responsable || '—' %>, échéance : <%= a.echeance || '—' %>, statut : <%= a.statut %>)</p><% }) %>
+    <% actions.forEach(a => { %><p>• <%= a.description %> (responsable : <%= a.responsable || 'N/A' %>, échéance : <%= fdate(a.echeance) %>, statut : <%= L(a.statut) %>)</p><% }) %>
   <% } %>
 
   <% if (plaintesLiees.length) { %>
   <h2>6. Plaintes de parties prenantes liées</h2>
-  <% plaintesLiees.forEach(p => { %><p>• <%= p.code_suivi %> — <%= p.nature || '—' %>, déposée le <%= p.date_depot %>, statut : <%= p.statut %></p><% }) %>
+  <% plaintesLiees.forEach(p => { %><p>• <%= p.code_suivi %> · <%= p.nature || 'N/A' %>, déposée le <%= fdate(p.date_depot) %>, statut : <%= L(p.statut) %></p><% }) %>
   <% } %>
 
   <p><b>Notification interne DG/holding :</b> <%= i.notifie_dg_le || 'non requise (gravité < seuil)' %></p>

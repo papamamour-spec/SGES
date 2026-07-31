@@ -13,13 +13,13 @@
   <h2 style="margin-top:0;">Nos politiques publiées</h2>
   <% if (!politiques.length) { %><p style="color:var(--gris)">Publication en cours.</p><% } %>
   <% politiques.forEach(p => { %>
-    <p>• <b><%= p.titre %></b> — version <%= p.version %><%= p.date_publication ? ', publiée le ' + p.date_publication : '' %></p>
+    <p>• <b><%= p.titre %></b> · version <%= p.version %><%= p.date_publication ? ', publiée le ' + fdate(p.date_publication) : '' %></p>
   <% }) %>
 </div>
 
 <div class="carte">
   <h2 style="margin-top:0;">Le mécanisme de plainte en bref</h2>
-  <p>Toute personne — riverain, client, travailleur, partenaire — peut déposer une plainte ou une doléance :
+  <p>Toute personne · riverain, client, travailleur, partenaire · peut déposer une plainte ou une doléance :
   par ce site web, par le numéro vert <b>800 00 EDK</b>, par les registres disponibles sur chaque site, par courriel ou par les boîtes à suggestions.</p>
   <p>Le dépôt peut être <b>anonyme</b> ou <b>confidentiel</b>. Un code de suivi vous est remis ; un accusé de réception est émis immédiatement.
   Les plaintes sensibles (harcèlement, violences, discrimination, travail des enfants) sont traitées dans un circuit confidentiel restreint.

@@ -1,24 +1,101 @@
 <%- include('partials/header', { titre: 'Administration' }) %>
 <h1>Administration</h1>
-<p class="sous-titre">Rôles et habilitations (§6.3) · <a href="/admin/journal">Consulter la piste d'audit</a></p>
+<p class="sous-titre">Gestion des utilisateurs et rôles (§6.3), notifications e-mail · <a href="/admin/journal">Consulter la piste d'audit</a></p>
+
+<% if (message) { %><div class="info"><%= message %></div><% } %>
+<% if (erreur) { %><div class="alerte"><%= erreur %></div><% } %>
+
+<% const estAdmin = user.role === 'admin'; %>
 
 <div class="carte">
-  <h2 style="margin-top:0;">Utilisateurs et rôles</h2>
+  <h2 style="margin-top:0;">Utilisateurs (<%= users.filter(u => u.actif).length %> actifs)</h2>
+
+  <% if (estAdmin) { %>
+  <details class="form-ajout"><summary>+ Créer un utilisateur</summary><div>
+    <form method="post" action="/admin/utilisateurs">
+      <div class="champs-3">
+        <div class="champ"><label>Nom complet *</label><input name="nom" required></div>
+        <div class="champ"><label>Adresse e-mail *</label><input type="email" name="email" required></div>
+        <div class="champ"><label>Mot de passe initial * (8 car. min)</label><input type="password" name="password" minlength="8" required></div>
+        <div class="champ"><label>Rôle *</label>
+          <select name="role"><% Object.entries(roles).forEach(([v, l]) => { %><option value="<%= v %>"><%= l %></option><% }) %></select></div>
+        <div class="champ"><label>Entité</label>
+          <select name="entite_id"><option value="">N/A</option><% entites.forEach(e => { %><option value="<%= e.id %>"><%= e.nom %></option><% }) %></select></div>
+        <div class="champ"><label>Site</label>
+          <select name="site_id"><option value="">N/A</option><% sites.forEach(s => { %><option value="<%= s.id %>"><%= s.nom %></option><% }) %></select></div>
+      </div>
+      <button type="submit">Créer le compte</button>
+    </form>
+  </div></details>
+  <% } %>
+
   <div class="table-scroll"><table>
-    <tr><th>Nom</th><th>E-mail</th><th>Rôle</th><th>Entité</th><th>Site</th><th>État</th></tr>
+    <tr><th>Nom</th><th>E-mail</th><th>Rôle</th><th>Entité</th><th>Site</th><th>État</th><% if (estAdmin) { %><th>Gérer</th><% } %></tr>
     <% users.forEach(u => { %>
       <tr>
         <td><%= u.nom %></td><td><%= u.email %></td>
         <td><span class="badge <%= u.role==='ifc' ? 'violet' : u.role==='plaintes_sensibles' ? 'rouge' : 'vert' %>"><%= u.role %></span></td>
-        <td><%= u.entite_nom || '—' %></td><td><%= u.site_nom || '—' %></td>
+        <td><%= u.entite_nom || 'N/A' %></td><td><%= u.site_nom || 'N/A' %></td>
         <td><span class="badge <%= u.actif ? 'vert' : 'gris' %>"><%= u.actif ? 'actif' : 'désactivé' %></span></td>
+        <% if (estAdmin) { %>
+        <td>
+          <details><summary style="cursor:pointer;font-size:.8rem;">modifier</summary>
+            <form method="post" action="/admin/utilisateurs/<%= u.id %>" style="min-width:220px;margin-bottom:.4rem;">
+              <input name="nom" value="<%= u.nom %>" style="margin-bottom:.3rem;">
+              <select name="role" class="mini" style="width:100%;margin-bottom:.3rem;">
+                <% Object.entries(roles).forEach(([v, l]) => { %><option value="<%= v %>" <%= u.role===v ? 'selected' : '' %>><%= l %></option><% }) %>
+              </select>
+              <select name="entite_id" class="mini" style="width:100%;margin-bottom:.3rem;">
+                <option value="">Entité : aucune</option><% entites.forEach(e => { %><option value="<%= e.id %>" <%= u.entite_id===e.id ? 'selected' : '' %>><%= e.nom %></option><% }) %>
+              </select>
+              <select name="site_id" class="mini" style="width:100%;margin-bottom:.3rem;">
+                <option value="">Site : aucun</option><% sites.forEach(s => { %><option value="<%= s.id %>" <%= u.site_id===s.id ? 'selected' : '' %>><%= s.nom %></option><% }) %>
+              </select>
+              <input type="password" name="password" minlength="8" placeholder="Nouveau mot de passe (optionnel)" style="margin-bottom:.3rem;">
+              <button class="bouton mini" type="submit">Enregistrer</button>
+            </form>
+            <form method="post" action="/admin/utilisateurs/<%= u.id %>" class="inline">
+              <input type="hidden" name="action" value="<%= u.actif ? 'desactiver' : 'reactiver' %>">
+              <button class="bouton mini <%= u.actif ? '' : 'secondaire' %>" type="submit"
+                <%= u.actif && u.id===user.id ? 'disabled title="Impossible sur votre propre compte"' : '' %>>
+                <%= u.actif ? 'Désactiver' : 'Réactiver' %></button>
+            </form>
+          </details>
+        </td>
+        <% } %>
       </tr>
     <% }) %>
   </table></div>
   <p style="font-size:.8rem;color:var(--gris);">
-    Rôles livrés : administrateur fonctionnel, responsable E&amp;S Groupe, responsable E&amp;S filiale, correspondant site,
-    auditeur interne, direction générale (lecture), consultation externe IFC (lecture, périmètre restreint, consultations journalisées),
-    gestionnaire de plaintes sensibles (circuit confidentiel étanche).
+    La désactivation est logique (aucune suppression physique, §6.8). Garde-fous : impossible de désactiver son propre compte ou le dernier administrateur actif.
   </p>
+</div>
+
+<div class="carte">
+  <h2 style="margin-top:0;">Notifications e-mail (Brevo)</h2>
+  <p>
+    État : <% if (mailConfigure) { %><span class="badge vert">clé API configurée · envois réels</span><% } else { %>
+    <span class="badge orange">BREVO_API_KEY absente · envois simulés et journalisés</span><% } %>
+  </p>
+  <form method="post" action="/admin/test-email" class="inline"><button type="submit">Envoyer un e-mail de test à <%= user.email %></button></form>
+  <p style="font-size:.8rem;color:var(--gris);margin-top:.6rem;">
+    Envois automatiques : incident significatif (gravité ≥ 4) → DG et Responsable E&amp;S Groupe ·
+    nouvelle plainte → Responsable E&amp;S Groupe (ou circuit confidentiel seul si sensible) ·
+    accusé de réception au plaignant (si e-mail fourni) ·
+    alertes quotidiennes d'échéance de permis J-180/90/60/30/7 → E&amp;S Groupe et filiales ·
+    synthèse quotidienne des actions en retard.
+  </p>
+  <div class="table-scroll"><table>
+    <tr><th>Horodatage (UTC)</th><th>Destinataires</th><th>Sujet</th><th>Objet</th><th>Statut</th></tr>
+    <% if (!notifications.length) { %><tr><td colspan="5" style="color:var(--gris)">Aucune notification émise pour l'instant.</td></tr><% } %>
+    <% notifications.forEach(n => { %>
+      <tr>
+        <td><%= fdate(n.horodatage) %></td><td style="font-size:.8rem;"><%= n.destinataires %></td><td><%= n.sujet %></td>
+        <td><span class="badge gris"><%= n.objet || 'N/A' %><%= n.objet_id ? ' #' + n.objet_id : '' %></span></td>
+        <td><span class="badge <%= n.statut==='envoye' ? 'vert' : n.statut==='simule' ? 'orange' : 'rouge' %>"><%= L(n.statut) %></span>
+          <% if (n.erreur && n.statut==='echec') { %><br><small style="color:var(--rouge)"><%= n.erreur %></small><% } %></td>
+      </tr>
+    <% }) %>
+  </table></div>
 </div>
 <%- include('partials/footer') %>

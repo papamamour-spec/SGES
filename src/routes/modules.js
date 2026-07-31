@@ -1,9 +1,11 @@
 const path = require('path');
 const express = require('express');
+const bcrypt = require('bcryptjs');
 const db = require('../db');
 const { requireAuth, requireRole, requireWrite } = require('../auth');
-const { logAudit, joursRestants, niveauAlerte, genCodeSuivi } = require('../helpers');
+const { logAudit, joursRestants, niveauAlerte, genCodeSuivi, ROLES } = require('../helpers');
 const { upload, UPLOAD_DIR, enregistrerFichiers, piecesPour, nbPieces } = require('../upload');
+const mailer = require('../mailer');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -11,7 +13,7 @@ router.use(requireAuth);
 const entites = () => db.prepare("SELECT * FROM entites WHERE actif=1 ORDER BY nom").all();
 const sites = () => db.prepare("SELECT s.*, e.nom entite_nom FROM sites s JOIN entites e ON e.id=s.entite_id WHERE s.actif=1 ORDER BY e.nom, s.nom").all();
 
-/* ============ Module 1 — Politiques et gouvernance ============ */
+/* ============ Module 1 · Politiques et gouvernance ============ */
 router.get('/politiques', (req, res) => {
   const rows = db.prepare(`SELECT p.*, e.nom entite_nom FROM politiques p LEFT JOIN entites e ON e.id=p.entite_id WHERE p.actif=1 ORDER BY p.titre`).all();
   res.render('politiques', { rows, entites: entites() });
@@ -31,7 +33,7 @@ router.post('/politiques/:id/statut', requireWrite, (req, res) => {
   res.redirect('/politiques');
 });
 
-/* ============ Module 2 — Registre des risques ============ */
+/* ============ Module 2 · Registre des risques ============ */
 router.get('/risques', (req, res) => {
   const rows = db.prepare(`SELECT r.*, e.nom entite_nom, s.nom site_nom FROM risques r
     LEFT JOIN entites e ON e.id=r.entite_id LEFT JOIN sites s ON s.id=r.site_id
@@ -57,7 +59,7 @@ router.post('/risques/:id/revision', requireWrite, (req, res) => {
   res.redirect('/risques');
 });
 
-/* ============ Module 3 — Conformité, permis, exigences ============ */
+/* ============ Module 3 · Conformité, permis, exigences ============ */
 router.get('/conformite', (req, res) => {
   const permis = db.prepare(`SELECT p.*, s.nom site_nom, s.pays FROM permis p JOIN sites s ON s.id=p.site_id WHERE p.actif=1 ORDER BY p.date_expiration`).all()
     .map((p) => ({ ...p, jours: joursRestants(p.date_expiration), alerte: niveauAlerte(joursRestants(p.date_expiration)), pieces: piecesPour('permis', p.id) }));
@@ -92,7 +94,7 @@ router.post('/exigences/:id/statut', requireWrite, (req, res) => {
   res.redirect('/conformite');
 });
 
-/* ============ Module 4 — Plans d'action et PAES ============ */
+/* ============ Module 4 · Plans d'action et PAES ============ */
 router.get('/actions', (req, res) => {
   const filtre = req.query.origine ? 'AND a.origine = ?' : '';
   const params = req.query.origine ? [req.query.origine] : [];
@@ -116,7 +118,7 @@ router.post('/actions/:id/statut', requireWrite, upload.array('fichiers', 5), (r
   const b = req.body;
   const nouveaux = enregistrerFichiers(req.files, 'action', Number(req.params.id), req.session.user.email);
   if (b.statut === 'cloturee' && nouveaux === 0 && nbPieces('action', Number(req.params.id)) === 0) {
-    return res.status(400).render('erreur', { titre: 'Preuve documentaire requise', message: 'La clôture d’une action exige une pièce justificative téléversée — document, photo ou PV (EF-PGM-06).' });
+    return res.status(400).render('erreur', { titre: 'Preuve documentaire requise', message: 'La clôture d’une action exige une pièce justificative téléversée · document, photo ou PV (EF-PGM-06).' });
   }
   db.prepare(`UPDATE actions SET statut=?, preuve=COALESCE(?, preuve), validateur=?, cloture_le=CASE WHEN ?='cloturee' THEN datetime('now') ELSE cloture_le END WHERE id=?`)
     .run(b.statut, b.preuve || null, b.statut === 'cloturee' ? req.session.user.nom : null, b.statut, req.params.id);
@@ -124,7 +126,7 @@ router.post('/actions/:id/statut', requireWrite, upload.array('fichiers', 5), (r
   res.redirect(req.get('referer') || '/actions');
 });
 
-/* ============ Module 5 — Formations et habilitations ============ */
+/* ============ Module 5 · Formations et habilitations ============ */
 router.get('/formations', (req, res) => {
   const rows = db.prepare(`SELECT f.*, s.nom site_nom FROM formations f LEFT JOIN sites s ON s.id=f.site_id WHERE f.actif=1 ORDER BY f.date_session DESC`).all();
   const habs = db.prepare(`SELECT h.*, s.nom site_nom FROM habilitations h LEFT JOIN sites s ON s.id=h.site_id WHERE h.actif=1 ORDER BY h.date_expiration`).all()
@@ -142,11 +144,11 @@ router.post('/habilitations', requireWrite, (req, res) => {
   const b = req.body;
   const r = db.prepare('INSERT INTO habilitations (site_id, titulaire, type, date_obtention, date_expiration) VALUES (?,?,?,?,?)')
     .run(b.site_id || null, b.titulaire, b.type, b.date_obtention || null, b.date_expiration);
-  logAudit(req.session.user, 'creation', 'habilitation', r.lastInsertRowid, `${b.titulaire} — ${b.type}`);
+  logAudit(req.session.user, 'creation', 'habilitation', r.lastInsertRowid, `${b.titulaire} · ${b.type}`);
   res.redirect('/formations');
 });
 
-/* ============ Module 6 — Urgences ============ */
+/* ============ Module 6 · Urgences ============ */
 router.get('/urgences', (req, res) => {
   const equipements = db.prepare(`SELECT q.*, s.nom site_nom FROM equipements_securite q JOIN sites s ON s.id=q.site_id WHERE q.actif=1 ORDER BY q.prochain_controle`).all()
     .map((e) => ({ ...e, jours: joursRestants(e.prochain_controle) }));
@@ -168,7 +170,7 @@ router.post('/exercices', requireWrite, (req, res) => {
   res.redirect('/urgences');
 });
 
-/* ============ Module 7 — Parties prenantes ============ */
+/* ============ Module 7 · Parties prenantes ============ */
 router.get('/parties-prenantes', (req, res) => {
   const pps = db.prepare(`SELECT p.*, s.nom site_nom FROM parties_prenantes p LEFT JOIN sites s ON s.id=p.site_id WHERE p.actif=1 ORDER BY p.nom`).all();
   const interactions = db.prepare(`SELECT i.*, p.nom pp_nom, s.nom site_nom FROM interactions_pp i
@@ -191,7 +193,7 @@ router.post('/interactions', requireWrite, (req, res) => {
   res.redirect('/parties-prenantes');
 });
 
-/* ============ Module 8 — Plaintes ============ */
+/* ============ Module 8 · Plaintes ============ */
 const ROLES_SENSIBLES = ['plaintes_sensibles', 'es_groupe']; // circuit restreint (EF-PLA-05)
 router.get('/plaintes', (req, res) => {
   const peutVoirSensibles = ROLES_SENSIBLES.includes(req.session.user.role);
@@ -234,6 +236,9 @@ router.post('/plaintes', requireWrite, (req, res) => {
       b.anonyme ? null : (b.plaignant_nom || null), b.anonyme ? null : (b.plaignant_contact || null),
       b.anonyme ? 1 : 0, b.sensible ? 1 : 0, Number(b.gravite || 2), b.date_echeance || null);
   logAudit(req.session.user, 'creation', 'plainte', r.lastInsertRowid, `${code} (saisie a posteriori, canal ${b.canal})`);
+  const pl = db.prepare('SELECT p.*, s.nom site_nom FROM plaintes p LEFT JOIN sites s ON s.id=p.site_id WHERE p.id=?').get(r.lastInsertRowid);
+  mailer.accuserReceptionPlainte(pl);
+  mailer.alerterNouvellePlainte(pl, pl.site_nom);
   res.redirect('/plaintes');
 });
 router.post('/plaintes/:id/traiter', requireWrite, (req, res) => {
@@ -249,7 +254,7 @@ router.post('/plaintes/:id/traiter', requireWrite, (req, res) => {
   res.redirect(`/plaintes/${req.params.id}`);
 });
 
-/* ============ Module 10 — Incidents SST ============ */
+/* ============ Module 10 · Incidents SST ============ */
 router.get('/incidents', (req, res) => {
   const rows = db.prepare(`SELECT i.*, s.nom site_nom, e.nom entite_nom FROM incidents i
     JOIN sites s ON s.id=i.site_id JOIN entites e ON e.id=s.entite_id WHERE i.actif=1 ORDER BY i.date_evenement DESC`).all();
@@ -279,7 +284,11 @@ router.post('/incidents', requireWrite, upload.array('photos', 5), (req, res) =>
       b.lat ? Number(b.lat) : null, b.lng ? Number(b.lng) : null, Number(b.jours_arret || 0), Number(b.deces || 0),
       b.mesures_immediates || null, b.autorites_notifiees || null, notifie);
   const nPhotos = enregistrerFichiers(req.files, 'incident', r.lastInsertRowid, req.session.user.email);
-  logAudit(req.session.user, 'creation', 'incident', r.lastInsertRowid, `${b.type} gravité ${gravite}${notifie ? ' — DG notifiée' : ''}${nPhotos ? ` — ${nPhotos} photo(s)` : ''}`);
+  logAudit(req.session.user, 'creation', 'incident', r.lastInsertRowid, `${b.type} gravité ${gravite}${notifie ? ' · DG notifiée' : ''}${nPhotos ? ` · ${nPhotos} photo(s)` : ''}`);
+  if (gravite >= 4) {
+    const siteNom = db.prepare('SELECT nom FROM sites WHERE id=?').get(b.site_id)?.nom || '';
+    mailer.notifierIncidentSignificatif({ id: r.lastInsertRowid, type: b.type, gravite, date_evenement: b.date_evenement, declarant: b.declarant || req.session.user.nom, description: b.description }, siteNom);
+  }
   res.redirect(`/incidents/${r.lastInsertRowid}`);
 });
 router.post('/incidents/:id/analyse', requireWrite, (req, res) => {
@@ -295,7 +304,7 @@ router.post('/incidents/:id/analyse', requireWrite, (req, res) => {
   res.redirect(`/incidents/${req.params.id}`);
 });
 
-/* ============ Module 11 — Environnement ============ */
+/* ============ Module 11 · Environnement ============ */
 router.get('/environnement', (req, res) => {
   const annee = String(new Date().getFullYear());
   const conso = db.prepare(`SELECT c.periode, c.type, SUM(c.valeur) total FROM consommations c
@@ -321,7 +330,7 @@ router.post('/dechets', requireWrite, (req, res) => {
   res.redirect('/environnement');
 });
 
-/* ============ Module 17 — Tiers ============ */
+/* ============ Module 17 · Tiers ============ */
 router.get('/tiers', (req, res) => {
   const rows = db.prepare(`SELECT t.*, e.nom entite_nom FROM tiers t LEFT JOIN entites e ON e.id=t.entite_id WHERE t.actif=1 ORDER BY t.critique DESC, t.nom`).all();
   res.render('tiers', { rows, entites: entites() });
@@ -335,7 +344,7 @@ router.post('/tiers', requireWrite, (req, res) => {
   res.redirect('/tiers');
 });
 
-/* ============ Module 18 — Audits et non-conformités ============ */
+/* ============ Module 18 · Audits et non-conformités ============ */
 router.get('/audits', (req, res) => {
   const rows = db.prepare(`SELECT a.*, s.nom site_nom, e.nom entite_nom FROM audits a
     LEFT JOIN sites s ON s.id=a.site_id LEFT JOIN entites e ON e.id=a.entite_id WHERE a.actif=1 ORDER BY a.date_audit DESC`).all();
@@ -367,7 +376,7 @@ router.post('/nc/:id/statut', requireWrite, (req, res) => {
   res.redirect('/audits');
 });
 
-/* ============ Module 20 — GED ============ */
+/* ============ Module 20 · GED ============ */
 router.get('/documents', (req, res) => {
   const q = (req.query.q || '').trim();
   const rows = q
@@ -409,9 +418,82 @@ router.get('/fichiers/:id', (req, res) => {
 /* ============ Administration ============ */
 router.get('/admin', requireRole('admin', 'es_groupe'), (req, res) => {
   const users = db.prepare(`SELECT u.*, e.nom entite_nom, s.nom site_nom FROM users u
-    LEFT JOIN entites e ON e.id=u.entite_id LEFT JOIN sites s ON s.id=u.site_id ORDER BY u.nom`).all();
-  const listeSites = sites();
-  res.render('admin', { users, entites: entites(), sites: listeSites });
+    LEFT JOIN entites e ON e.id=u.entite_id LEFT JOIN sites s ON s.id=u.site_id ORDER BY u.actif DESC, u.nom`).all();
+  const notifications = db.prepare('SELECT * FROM notifications ORDER BY id DESC LIMIT 100').all();
+  res.render('admin', {
+    users, entites: entites(), sites: sites(), notifications,
+    roles: ROLES, mailConfigure: mailer.apiConfiguree(),
+    message: req.query.msg || null, erreur: req.query.err || null,
+  });
+});
+
+// Création d'un utilisateur (admin uniquement)
+router.post('/admin/utilisateurs', requireRole('admin'), (req, res) => {
+  const b = req.body;
+  const email = (b.email || '').trim().toLowerCase();
+  if (!b.nom || !email || !/@/.test(email)) return res.redirect('/admin?err=' + encodeURIComponent('Nom et adresse e-mail valide obligatoires.'));
+  if (!ROLES[b.role]) return res.redirect('/admin?err=' + encodeURIComponent('Rôle inconnu.'));
+  if (!b.password || b.password.length < 8) return res.redirect('/admin?err=' + encodeURIComponent('Mot de passe de 8 caractères minimum.'));
+  if (db.prepare('SELECT 1 FROM users WHERE email=?').get(email)) return res.redirect('/admin?err=' + encodeURIComponent('Cette adresse e-mail existe déjà.'));
+  const r = db.prepare('INSERT INTO users (nom, email, password_hash, role, entite_id, site_id) VALUES (?,?,?,?,?,?)')
+    .run(b.nom.trim(), email, bcrypt.hashSync(b.password, 10), b.role, b.entite_id || null, b.site_id || null);
+  logAudit(req.session.user, 'creation', 'utilisateur', r.lastInsertRowid, `${email} (${b.role})`);
+  res.redirect('/admin?msg=' + encodeURIComponent(`Utilisateur ${email} créé.`));
+});
+
+// Modification : rôle, rattachement, mot de passe, activation/désactivation
+router.post('/admin/utilisateurs/:id', requireRole('admin'), (req, res) => {
+  const cible = db.prepare('SELECT * FROM users WHERE id=?').get(req.params.id);
+  if (!cible) return res.redirect('/admin?err=' + encodeURIComponent('Utilisateur introuvable.'));
+  const b = req.body;
+  const details = [];
+
+  if (b.action === 'desactiver') {
+    if (cible.id === req.session.user.id) return res.redirect('/admin?err=' + encodeURIComponent('Impossible de désactiver votre propre compte.'));
+    const admins = db.prepare("SELECT COUNT(*) n FROM users WHERE role='admin' AND actif=1").get().n;
+    if (cible.role === 'admin' && cible.actif && admins <= 1) return res.redirect('/admin?err=' + encodeURIComponent('Impossible de désactiver le dernier administrateur.'));
+    db.prepare('UPDATE users SET actif=0 WHERE id=?').run(cible.id);
+    logAudit(req.session.user, 'desactivation', 'utilisateur', cible.id, cible.email);
+    return res.redirect('/admin?msg=' + encodeURIComponent(`Compte ${cible.email} désactivé.`));
+  }
+  if (b.action === 'reactiver') {
+    db.prepare('UPDATE users SET actif=1 WHERE id=?').run(cible.id);
+    logAudit(req.session.user, 'modification', 'utilisateur', cible.id, `réactivation ${cible.email}`);
+    return res.redirect('/admin?msg=' + encodeURIComponent(`Compte ${cible.email} réactivé.`));
+  }
+
+  if (b.role && b.role !== cible.role) {
+    if (!ROLES[b.role]) return res.redirect('/admin?err=' + encodeURIComponent('Rôle inconnu.'));
+    const admins = db.prepare("SELECT COUNT(*) n FROM users WHERE role='admin' AND actif=1").get().n;
+    if (cible.role === 'admin' && admins <= 1) return res.redirect('/admin?err=' + encodeURIComponent('Impossible de retirer le rôle du dernier administrateur.'));
+    details.push(`rôle ${cible.role} → ${b.role}`);
+  }
+  if (b.password) {
+    if (b.password.length < 8) return res.redirect('/admin?err=' + encodeURIComponent('Mot de passe de 8 caractères minimum.'));
+    details.push('mot de passe réinitialisé');
+  }
+  db.prepare(`UPDATE users SET nom=COALESCE(?,nom), role=COALESCE(?,role), entite_id=?, site_id=?,
+    password_hash=COALESCE(?,password_hash) WHERE id=?`)
+    .run(b.nom || null, b.role || null, b.entite_id || null, b.site_id || null,
+      b.password ? bcrypt.hashSync(b.password, 10) : null, cible.id);
+  logAudit(req.session.user, 'modification', 'utilisateur', cible.id, `${cible.email}${details.length ? ' : ' + details.join(', ') : ''}`);
+  res.redirect('/admin?msg=' + encodeURIComponent(`Compte ${cible.email} mis à jour.`));
+});
+
+// E-mail de test de la configuration Brevo
+router.post('/admin/test-email', requireRole('admin', 'es_groupe'), async (req, res) => {
+  await mailer.envoyer({
+    to: [req.session.user.email],
+    sujet: '[SGES] E-mail de test de la configuration Brevo',
+    titre: 'Test de configuration',
+    corps: `<p>Cet e-mail confirme que l'envoi transactionnel de la Plateforme SGES fonctionne.</p>
+      <p>Demandé par ${req.session.user.nom} (${req.session.user.email}).</p>`,
+    objet: 'test', objetId: null,
+  });
+  logAudit(req.session.user, 'creation', 'email_test', null, req.session.user.email);
+  res.redirect('/admin?msg=' + encodeURIComponent(mailer.apiConfiguree()
+    ? 'E-mail de test envoyé · vérifiez votre boîte de réception et le journal ci-dessous.'
+    : 'BREVO_API_KEY non configurée : envoi simulé, visible dans le journal des notifications.'));
 });
 router.get('/admin/journal', requireRole('admin', 'auditeur', 'es_groupe'), (req, res) => {
   const rows = db.prepare('SELECT * FROM audit_log ORDER BY id DESC LIMIT 300').all();

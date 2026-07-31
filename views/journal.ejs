@@ -9,7 +9,7 @@
       <td><%= l.horodatage %></td><td><%= l.user_email %></td>
       <td><span class="badge <%= l.action==='consultation_sensible' ? 'rouge' : l.action==='export' ? 'violet' : 'gris' %>"><%= l.action %></span></td>
       <td><%= l.objet %><%= l.objet_id ? ' #' + l.objet_id : '' %></td>
-      <td style="font-size:.8rem;"><%= l.details || '—' %></td>
+      <td style="font-size:.8rem;"><%= l.details || 'N/A' %></td>
     </tr>
   <% }) %>
 </table></div>

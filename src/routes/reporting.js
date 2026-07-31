@@ -61,7 +61,7 @@ router.get('/reporting/notification/:incidentId', (req, res) => {
   res.render('reporting/notification', { i, plaintesLiees, actions, pieces: piecesPour('incident', i.id), genereLe: new Date().toLocaleString('fr-FR') });
 });
 
-// ---- Exports CSV (EF-REP-06) — chaque export est journalisé (6.8)
+// ---- Exports CSV (EF-REP-06) · chaque export est journalisé (6.8)
 const EXPORTS = {
   incidents: `SELECT i.id, s.nom AS site, i.type, i.gravite, i.date_evenement, i.description, i.jours_arret, i.deces, i.statut
     FROM incidents i JOIN sites s ON s.id=i.site_id WHERE i.actif=1`,

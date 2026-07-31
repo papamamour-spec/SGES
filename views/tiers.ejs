@@ -1,5 +1,5 @@
 <%- include('partials/header', { titre: 'Tiers' }) %>
-<h1>Module 17 — Fournisseurs, sous-traitants et tiers</h1>
+<h1>Module 17 : Fournisseurs, sous-traitants et tiers</h1>
 <p class="sous-titre">Référentiel avec cotation du risque E&amp;S, code de conduite et clauses contractuelles (EF-TIE-01/03)</p>
 
 <details class="form-ajout"><summary>+ Nouveau tiers</summary><div>
@@ -31,7 +31,7 @@
       <td><% if (t.score_es !== null) { %><span class="badge <%= t.score_es>=70 ? 'vert' : t.score_es>=50 ? 'orange' : 'rouge' %>"><%= t.score_es %>/100</span><% } else { %><span class="badge gris">non évalué</span><% } %></td>
       <td><%= t.code_conduite_accepte ? '✔' : '✘' %></td>
       <td><%= t.clauses_es_contrat ? '✔' : '✘' %></td>
-      <td><%= t.dernier_audit || '—' %></td>
+      <td><%= fdate(t.dernier_audit) %></td>
     </tr>
   <% }) %>
 </table></div>

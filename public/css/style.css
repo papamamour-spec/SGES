@@ -29,10 +29,16 @@ main { max-width: 1200px; margin: 0 auto; padding: 1.2rem 1rem 3rem; }
 .kpi.orange { border-left-color: var(--orange); } .kpi.rouge { border-left-color: var(--rouge); }
 
 table { width: 100%; border-collapse: collapse; background: var(--carte); font-size: .87rem; }
-th, td { text-align: left; padding: .45rem .6rem; border-bottom: 1px solid var(--bord); vertical-align: top; }
+th, td { text-align: left; padding: .5rem .65rem; border-bottom: 1px solid var(--bord); vertical-align: top; }
 th { background: #eef3f0; font-weight: 600; white-space: nowrap; }
-tr:hover td { background: #f7faf8; }
+tbody tr:nth-child(even) td, table tr:nth-child(even) td { background: #fafcfb; }
+tr:hover td { background: #f2f7f4; }
 .table-scroll { overflow-x: auto; border: 1px solid var(--bord); border-radius: 8px; margin-bottom: 1rem; }
+
+/* Cartouche de maîtrise documentaire (rapports IFC, style ISO 9001) */
+.doc-controle { border: 1.5px solid var(--vert-fonce); margin: 1rem 0 1.5rem; font-size: .82rem; }
+.doc-controle th { background: #eef3f0; width: 15%; border: 1px solid var(--bord); font-weight: 600; white-space: normal; }
+.doc-controle td { border: 1px solid var(--bord); width: 35%; background: #fff !important; }
 
 .badge { display: inline-block; padding: .1rem .5rem; border-radius: 10px; font-size: .75rem; font-weight: 600; white-space: nowrap; }
 .badge.vert { background: #d8f0e2; color: var(--vert-fonce); }
@@ -78,9 +84,21 @@ details.form-ajout > div { background: var(--carte); border: 1px solid var(--bor
 .public-hero h1 { font-size: 1.7rem; }
 .public-hero p { max-width: 640px; margin: .6rem auto; opacity: .92; }
 
-/* Impression des rapports IFC */
+/* Accessibilité : cible de focus visible au clavier (WCAG) */
+:focus-visible { outline: 3px solid var(--orange); outline-offset: 1px; }
+button:focus-visible, .bouton:focus-visible { outline: 3px solid #1f2d27; }
+
+/* Champs obligatoires : l'astérisque des libellés est porté en couleur d'alerte */
+label { font-weight: 500; }
+
+/* Impression des rapports IFC : mise en page documentaire */
 @media print {
-  header.topbar, nav.menu, .no-print { display: none !important; }
-  body { background: #fff; } main { max-width: none; }
-  .carte { border: none; padding: 0; }
+  header.topbar, nav.menu, .no-print, footer { display: none !important; }
+  body { background: #fff; font-size: 11pt; } main { max-width: none; padding: 0; }
+  .carte { border: none; padding: 0; box-shadow: none; }
+  h2 { page-break-after: avoid; }
+  table, .doc-controle { page-break-inside: avoid; }
+  .table-scroll { border: none; overflow: visible; }
+  a { color: inherit; text-decoration: none; }
+  @page { margin: 18mm 15mm; }
 }

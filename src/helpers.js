@@ -84,4 +84,58 @@ function inventaireGES(annee) {
   return { scope1: +scope1.toFixed(2), scope2: +scope2.toFixed(2), total: +(scope1 + scope2).toFixed(2), detail };
 }
 
-module.exports = { ROLES, WRITE_ROLES, logAudit, joursRestants, niveauAlerte, genCodeSuivi, indicateursSST, inventaireGES };
+/* Libellés français des codes internes : l'interface ne doit jamais afficher
+   de valeur technique brute (en_cours, AT_arret...) — lisibilité type documentation
+   qualité ISO / reporting IFC. */
+const LIBELLES = {
+  // Statuts d'action
+  ouverte: 'Ouverte', en_cours: 'En cours', en_retard: 'En retard', cloturee: 'Clôturée',
+  // Priorités
+  haute: 'Haute', moyenne: 'Moyenne', basse: 'Basse',
+  // Politiques et documents
+  redaction: 'En rédaction', revue: 'En revue', approuvee: 'Approuvée', publiee: 'Publiée', retiree: 'Retirée',
+  verification: 'En vérification', approuve: 'Approuvé', diffuse: 'Diffusé', archive: 'Archivé', retire: 'Retiré',
+  // Risques
+  ouvert: 'Ouvert', maitrise: 'Maîtrisé', clos: 'Clos',
+  // Permis
+  valide: 'Valide', expire: 'Expiré', en_renouvellement: 'En renouvellement',
+  // Conformité
+  conforme: 'Conforme', partiel: 'Partiellement conforme', non_conforme: 'Non conforme', a_evaluer: 'À évaluer',
+  // Plaintes
+  recue: 'Reçue', en_instruction: 'En instruction', resolue: 'Résolue', close: 'Close', rejetee: 'Rejetée',
+  externe: 'Externe (communautés)', interne: 'Interne (travailleurs)',
+  web: 'Formulaire web', mobile: 'Application mobile', numero_vert: 'Numéro vert',
+  registre_papier: 'Registre papier', courriel: 'Courriel', boite: 'Boîte à suggestions',
+  accepte: 'Résolution acceptée', refuse: 'Résolution refusée', recours: 'Recours engagé',
+  // Incidents
+  AT_arret: 'Accident du travail avec arrêt', AT_sans_arret: 'Accident du travail sans arrêt',
+  trajet: 'Accident de trajet', presque_accident: 'Presque-accident', situation_dangereuse: 'Situation dangereuse',
+  environnement: 'Incident environnemental', surete: 'Incident de sûreté', sanitaire: 'Incident sanitaire',
+  tiers: 'Incident impliquant un tiers', declare: 'Déclaré', en_analyse: 'En analyse',
+  // Audits et non-conformités
+  planifie: 'Planifié', realise: 'Réalisé', inspection_securite: 'Inspection sécurité', fournisseur: 'Audit fournisseur',
+  majeure: 'Majeure', mineure: 'Mineure', observation: 'Observation',
+  action_definie: 'Action définie', corrigee: 'Corrigée', verifiee: 'Vérifiée efficace',
+  // Équipements
+  non_conforme_eq: 'Non conforme', hors_service: 'Hors service',
+  // Origines d'action
+  PAES: 'PAES IFC', audit: 'Audit', incident: 'Incident', plainte: 'Plainte',
+  inspection: 'Inspection', revue_direction: 'Revue de direction', conformite: 'Conformité',
+  // Notifications
+  envoye: 'Envoyé', simule: 'Simulé', echec: 'Échec',
+};
+// Certains codes sont partagés entre objets (ex. « interne » audit vs mécanisme) :
+// le libellé le plus explicite est retenu ; « interne/externe » d'audit passe par L2.
+const LIBELLES_AUDIT = { interne: 'Audit interne', externe: 'Audit externe' };
+function libelle(code) { return LIBELLES[code] || code || 'N/A'; }
+function libelleAudit(code) { return LIBELLES_AUDIT[code] || libelle(code); }
+
+// Dates au format français : JJ/MM/AAAA (+ heure si présente)
+function fdate(v) {
+  if (!v) return 'N/A';
+  const m = String(v).match(/^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2}))?/);
+  if (!m) return String(v);
+  return `${m[3]}/${m[2]}/${m[1]}${m[4] ? ` à ${m[4]}h${m[5]}` : ''}`;
+}
+
+module.exports = { ROLES, WRITE_ROLES, logAudit, joursRestants, niveauAlerte, genCodeSuivi, indicateursSST, inventaireGES, libelle, libelleAudit, fdate };

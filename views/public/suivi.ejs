@@ -9,7 +9,7 @@
   <% if (plainte) { %>
     <div class="info">
       <p><b>Code :</b> <%= plainte.code_suivi %></p>
-      <p><b>Déposée le :</b> <%= plainte.date_depot %> · <b>Accusé de réception :</b> <%= plainte.date_accuse || '—' %></p>
+      <p><b>Déposée le :</b> <%= fdate(plainte.date_depot) %> · <b>Accusé de réception :</b> <%= fdate(plainte.date_accuse) %></p>
       <p><b>Statut :</b> <span class="badge <%= ['resolue','close'].includes(plainte.statut) ? 'vert' : 'orange' %>"><%= plainte.statut %></span></p>
       <% if (plainte.resolution) { %><p><b>Résolution proposée :</b> <%= plainte.resolution %></p><% } %>
     </div>
