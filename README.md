@@ -52,6 +52,10 @@ Mot de passe commun : `edk2026`
 
 **Pièces justificatives** : téléversement de fichiers (photos, PDF, documents — 10 Mo max, extensions contrôlées) sur les incidents (photos à la déclaration), les actions (clôture impossible sans pièce téléversée), les permis (scan du document) et les plaintes (y compris par le plaignant depuis le formulaire public). Les fichiers sont stockés dans `SGES_DATA_DIR/uploads` (donc sur le volume persistant en déploiement), servis uniquement aux utilisateurs authentifiés, et les pièces des plaintes sensibles restent dans le circuit confidentiel restreint.
 
+**Notifications e-mail (Brevo)** : incident significatif (gravité ≥ 4) notifié à la DG et au Responsable E&S Groupe, accusé de réception envoyé au plaignant (si e-mail fourni), alerte de nouvelle plainte (routée vers le seul circuit confidentiel si sensible, sans contenu dans l'e-mail), alertes quotidiennes d'échéance de permis (J-180/90/60/30/7, sans doublon) et synthèse des actions en retard. Chaque envoi — réel, simulé ou en échec — est journalisé en base et visible dans `/admin`. Un bouton d'e-mail de test permet de valider la configuration.
+
+**Administration** : gestion complète des utilisateurs (création, modification de rôle et de rattachement, réinitialisation de mot de passe, désactivation logique avec garde-fous : ni son propre compte, ni le dernier administrateur), journal des notifications, piste d'audit.
+
 **Exigences transverses** : rôles fins par module avec profils lecture seule (DG, IFC), circuit confidentiel des plaintes sensibles inaccessible aux autres rôles et à l'administrateur, piste d'audit inaltérable de toutes les opérations sensibles (`/admin/journal`), désactivation logique sans suppression physique, interface responsive en français.
 
 Voir `docs/COUVERTURE_EXIGENCES.md` pour la traçabilité détaillée exigence par exigence et les limites du présent lot.
@@ -71,6 +75,9 @@ Le dépôt est prêt pour Railway : la base est initialisée automatiquement au 
 3. **Variables d'environnement** (onglet *Variables* du service) :
    - `SGES_DATA_DIR` = `/data`
    - `SESSION_SECRET` = une valeur aléatoire longue (ex. `openssl rand -hex 32`)
+   - `BREVO_API_KEY` = clé API Brevo (transactionnel) pour l'envoi réel des e-mails — sans elle, les envois sont simulés et journalisés
+   - `EMAIL_FROM` = expéditeur, ex. `SGES Groupe EDK <sges@votredomaine.sn>` (adresse d'un expéditeur validé dans Brevo)
+   - `APP_URL` = URL publique du service (ex. `https://sges-production.up.railway.app`) pour les liens dans les e-mails
 4. **Settings → Networking → Generate Domain** pour obtenir l'URL publique (HTTPS fourni par Railway).
 
 Chaque push sur `main` redéploie automatiquement ; les données du volume sont conservées.

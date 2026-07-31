@@ -47,4 +47,7 @@ app.use((err, req, res, next) => {
   res.status(500).render('erreur', { titre: 'Erreur interne', message: 'Une erreur est survenue. L’incident a été journalisé.' });
 });
 
+// Alertes quotidiennes : échéances de permis (J-180…J-7) et actions en retard
+require('./src/mailer').lancerPlanificateur();
+
 app.listen(PORT, () => console.log(`Plateforme SGES Groupe EDK — http://localhost:${PORT}`));

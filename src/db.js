@@ -362,6 +362,19 @@ CREATE TABLE IF NOT EXISTS pieces_jointes (
 );
 CREATE INDEX IF NOT EXISTS idx_pj_objet ON pieces_jointes (objet, objet_id);
 
+-- Journal des notifications e-mail (EF-SST-04, EF-CONF-03, EF-PLA-03) :
+-- chaque envoi (réel, simulé ou en échec) est tracé à des fins d'auditabilité.
+CREATE TABLE IF NOT EXISTS notifications (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  horodatage TEXT NOT NULL DEFAULT (datetime('now')),
+  destinataires TEXT NOT NULL,
+  sujet TEXT NOT NULL,
+  objet TEXT,                                  -- incident | plainte | permis | actions | test
+  objet_id INTEGER,
+  statut TEXT NOT NULL,                        -- envoye | simule (pas de clé API) | echec
+  erreur TEXT
+);
+
 -- Piste d'audit inaltérable (6.3 / 6.8) : aucune suppression physique dans l'application
 CREATE TABLE IF NOT EXISTS audit_log (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -373,5 +386,9 @@ CREATE TABLE IF NOT EXISTS audit_log (
   details TEXT
 );
 `);
+
+// Migration légère : colonne de suivi du dernier seuil d'alerte envoyé par permis
+// (évite les envois en double du planificateur quotidien).
+try { db.exec('ALTER TABLE permis ADD COLUMN alerte_envoyee TEXT'); } catch (e) { /* colonne déjà présente */ }
 
 module.exports = db;

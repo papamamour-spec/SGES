@@ -1,9 +1,11 @@
 const path = require('path');
 const express = require('express');
+const bcrypt = require('bcryptjs');
 const db = require('../db');
 const { requireAuth, requireRole, requireWrite } = require('../auth');
-const { logAudit, joursRestants, niveauAlerte, genCodeSuivi } = require('../helpers');
+const { logAudit, joursRestants, niveauAlerte, genCodeSuivi, ROLES } = require('../helpers');
 const { upload, UPLOAD_DIR, enregistrerFichiers, piecesPour, nbPieces } = require('../upload');
+const mailer = require('../mailer');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -234,6 +236,9 @@ router.post('/plaintes', requireWrite, (req, res) => {
       b.anonyme ? null : (b.plaignant_nom || null), b.anonyme ? null : (b.plaignant_contact || null),
       b.anonyme ? 1 : 0, b.sensible ? 1 : 0, Number(b.gravite || 2), b.date_echeance || null);
   logAudit(req.session.user, 'creation', 'plainte', r.lastInsertRowid, `${code} (saisie a posteriori, canal ${b.canal})`);
+  const pl = db.prepare('SELECT p.*, s.nom site_nom FROM plaintes p LEFT JOIN sites s ON s.id=p.site_id WHERE p.id=?').get(r.lastInsertRowid);
+  mailer.accuserReceptionPlainte(pl);
+  mailer.alerterNouvellePlainte(pl, pl.site_nom);
   res.redirect('/plaintes');
 });
 router.post('/plaintes/:id/traiter', requireWrite, (req, res) => {
@@ -280,6 +285,10 @@ router.post('/incidents', requireWrite, upload.array('photos', 5), (req, res) =>
       b.mesures_immediates || null, b.autorites_notifiees || null, notifie);
   const nPhotos = enregistrerFichiers(req.files, 'incident', r.lastInsertRowid, req.session.user.email);
   logAudit(req.session.user, 'creation', 'incident', r.lastInsertRowid, `${b.type} gravité ${gravite}${notifie ? ' — DG notifiée' : ''}${nPhotos ? ` — ${nPhotos} photo(s)` : ''}`);
+  if (gravite >= 4) {
+    const siteNom = db.prepare('SELECT nom FROM sites WHERE id=?').get(b.site_id)?.nom || '';
+    mailer.notifierIncidentSignificatif({ id: r.lastInsertRowid, type: b.type, gravite, date_evenement: b.date_evenement, declarant: b.declarant || req.session.user.nom, description: b.description }, siteNom);
+  }
   res.redirect(`/incidents/${r.lastInsertRowid}`);
 });
 router.post('/incidents/:id/analyse', requireWrite, (req, res) => {
@@ -409,9 +418,82 @@ router.get('/fichiers/:id', (req, res) => {
 /* ============ Administration ============ */
 router.get('/admin', requireRole('admin', 'es_groupe'), (req, res) => {
   const users = db.prepare(`SELECT u.*, e.nom entite_nom, s.nom site_nom FROM users u
-    LEFT JOIN entites e ON e.id=u.entite_id LEFT JOIN sites s ON s.id=u.site_id ORDER BY u.nom`).all();
-  const listeSites = sites();
-  res.render('admin', { users, entites: entites(), sites: listeSites });
+    LEFT JOIN entites e ON e.id=u.entite_id LEFT JOIN sites s ON s.id=u.site_id ORDER BY u.actif DESC, u.nom`).all();
+  const notifications = db.prepare('SELECT * FROM notifications ORDER BY id DESC LIMIT 100').all();
+  res.render('admin', {
+    users, entites: entites(), sites: sites(), notifications,
+    roles: ROLES, mailConfigure: mailer.apiConfiguree(),
+    message: req.query.msg || null, erreur: req.query.err || null,
+  });
+});
+
+// Création d'un utilisateur (admin uniquement)
+router.post('/admin/utilisateurs', requireRole('admin'), (req, res) => {
+  const b = req.body;
+  const email = (b.email || '').trim().toLowerCase();
+  if (!b.nom || !email || !/@/.test(email)) return res.redirect('/admin?err=' + encodeURIComponent('Nom et adresse e-mail valide obligatoires.'));
+  if (!ROLES[b.role]) return res.redirect('/admin?err=' + encodeURIComponent('Rôle inconnu.'));
+  if (!b.password || b.password.length < 8) return res.redirect('/admin?err=' + encodeURIComponent('Mot de passe de 8 caractères minimum.'));
+  if (db.prepare('SELECT 1 FROM users WHERE email=?').get(email)) return res.redirect('/admin?err=' + encodeURIComponent('Cette adresse e-mail existe déjà.'));
+  const r = db.prepare('INSERT INTO users (nom, email, password_hash, role, entite_id, site_id) VALUES (?,?,?,?,?,?)')
+    .run(b.nom.trim(), email, bcrypt.hashSync(b.password, 10), b.role, b.entite_id || null, b.site_id || null);
+  logAudit(req.session.user, 'creation', 'utilisateur', r.lastInsertRowid, `${email} (${b.role})`);
+  res.redirect('/admin?msg=' + encodeURIComponent(`Utilisateur ${email} créé.`));
+});
+
+// Modification : rôle, rattachement, mot de passe, activation/désactivation
+router.post('/admin/utilisateurs/:id', requireRole('admin'), (req, res) => {
+  const cible = db.prepare('SELECT * FROM users WHERE id=?').get(req.params.id);
+  if (!cible) return res.redirect('/admin?err=' + encodeURIComponent('Utilisateur introuvable.'));
+  const b = req.body;
+  const details = [];
+
+  if (b.action === 'desactiver') {
+    if (cible.id === req.session.user.id) return res.redirect('/admin?err=' + encodeURIComponent('Impossible de désactiver votre propre compte.'));
+    const admins = db.prepare("SELECT COUNT(*) n FROM users WHERE role='admin' AND actif=1").get().n;
+    if (cible.role === 'admin' && cible.actif && admins <= 1) return res.redirect('/admin?err=' + encodeURIComponent('Impossible de désactiver le dernier administrateur.'));
+    db.prepare('UPDATE users SET actif=0 WHERE id=?').run(cible.id);
+    logAudit(req.session.user, 'desactivation', 'utilisateur', cible.id, cible.email);
+    return res.redirect('/admin?msg=' + encodeURIComponent(`Compte ${cible.email} désactivé.`));
+  }
+  if (b.action === 'reactiver') {
+    db.prepare('UPDATE users SET actif=1 WHERE id=?').run(cible.id);
+    logAudit(req.session.user, 'modification', 'utilisateur', cible.id, `réactivation ${cible.email}`);
+    return res.redirect('/admin?msg=' + encodeURIComponent(`Compte ${cible.email} réactivé.`));
+  }
+
+  if (b.role && b.role !== cible.role) {
+    if (!ROLES[b.role]) return res.redirect('/admin?err=' + encodeURIComponent('Rôle inconnu.'));
+    const admins = db.prepare("SELECT COUNT(*) n FROM users WHERE role='admin' AND actif=1").get().n;
+    if (cible.role === 'admin' && admins <= 1) return res.redirect('/admin?err=' + encodeURIComponent('Impossible de retirer le rôle du dernier administrateur.'));
+    details.push(`rôle ${cible.role} → ${b.role}`);
+  }
+  if (b.password) {
+    if (b.password.length < 8) return res.redirect('/admin?err=' + encodeURIComponent('Mot de passe de 8 caractères minimum.'));
+    details.push('mot de passe réinitialisé');
+  }
+  db.prepare(`UPDATE users SET nom=COALESCE(?,nom), role=COALESCE(?,role), entite_id=?, site_id=?,
+    password_hash=COALESCE(?,password_hash) WHERE id=?`)
+    .run(b.nom || null, b.role || null, b.entite_id || null, b.site_id || null,
+      b.password ? bcrypt.hashSync(b.password, 10) : null, cible.id);
+  logAudit(req.session.user, 'modification', 'utilisateur', cible.id, `${cible.email}${details.length ? ' : ' + details.join(', ') : ''}`);
+  res.redirect('/admin?msg=' + encodeURIComponent(`Compte ${cible.email} mis à jour.`));
+});
+
+// E-mail de test de la configuration Brevo
+router.post('/admin/test-email', requireRole('admin', 'es_groupe'), async (req, res) => {
+  await mailer.envoyer({
+    to: [req.session.user.email],
+    sujet: '[SGES] E-mail de test de la configuration Brevo',
+    titre: 'Test de configuration',
+    corps: `<p>Cet e-mail confirme que l'envoi transactionnel de la Plateforme SGES fonctionne.</p>
+      <p>Demandé par ${req.session.user.nom} (${req.session.user.email}).</p>`,
+    objet: 'test', objetId: null,
+  });
+  logAudit(req.session.user, 'creation', 'email_test', null, req.session.user.email);
+  res.redirect('/admin?msg=' + encodeURIComponent(mailer.apiConfiguree()
+    ? 'E-mail de test envoyé — vérifiez votre boîte de réception et le journal ci-dessous.'
+    : 'BREVO_API_KEY non configurée : envoi simulé, visible dans le journal des notifications.'));
 });
 router.get('/admin/journal', requireRole('admin', 'auditeur', 'es_groupe'), (req, res) => {
   const rows = db.prepare('SELECT * FROM audit_log ORDER BY id DESC LIMIT 300').all();

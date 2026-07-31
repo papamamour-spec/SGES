@@ -16,13 +16,13 @@ Traçabilité entre le cahier des charges CDC-SGES-EDK-2026-01 et la présente v
 | EF-RIS-02/05/06/07 | Screening projets, EIES hébergées, liste d'exclusion, cartographie | Partiel | EIES gérées en GED ; screening et contrôle liste d'exclusion à venir |
 | EF-CONF-01 | Registre des exigences légales par pays/thématique | Livré | `/conformite` |
 | EF-CONF-02 | Référentiel des permis avec dates et autorité | Livré | `/conformite` |
-| EF-CONF-03 | Alertes J-180/90/60/30/7 avec visibilité hiérarchique | Livré | Alertes calculées, remontées au tableau de bord Groupe |
+| EF-CONF-03 | Alertes J-180/90/60/30/7 avec escalade | Livré | Alertes au tableau de bord + e-mails quotidiens automatiques (Brevo) aux responsables E&S Groupe et filiales, sans doublon par seuil |
 | EF-CONF-04 | Évaluations de conformité avec taux | Livré | Taux calculé sur les exigences évaluées |
 | EF-CONF-07 | Suivi des covenants IFC en catégorie spécifique | Livré | Marqueur « Covenant IFC » dans le registre |
 | EF-CONF-05/06 | Visites d'inspection, veille réglementaire | À venir | |
 | EF-PGM-01/02 | Référentiel unique d'actions, structuration complète | Livré | `/actions` — origines PAES, audit, incident, plainte, inspection… |
 | EF-PGM-03 | Vue PAES avec numérotation contractuelle | Livré | Filtre PAES + bloc dédié au tableau de bord |
-| EF-PGM-05 | Notification et escalade des retards | Partiel | Statut « en retard » calculé et remonté ; notifications e-mail à venir |
+| EF-PGM-05 | Notification et escalade des retards | Livré | Passage automatique en « en retard » à l'échéance + synthèse e-mail quotidienne au Responsable E&S Groupe |
 | EF-PGM-06 | Clôture interdite sans pièce justificative | Livré | Contrôle serveur bloquant : un fichier téléversé (document, photo, PV) est exigé pour clôturer |
 | EF-FOR-02/03 | Plan de formation, alertes habilitations | Livré | `/formations` |
 | EF-FOR-01/04/05 | Matrice de compétences, accueil sécurité, e-learning | À venir | |
@@ -32,7 +32,7 @@ Traçabilité entre le cahier des charges CDC-SGES-EDK-2026-01 et la présente v
 | EF-PAR-05 | Espace public sans authentification | Livré | `/` (politiques publiées + accès au mécanisme de plainte) |
 | EF-PLA-01 | Canaux multiples | Livré | Web public + saisie a posteriori (registre, numéro vert, courriel, boîte) |
 | EF-PLA-02 | Dépôt anonyme et confidentiel avec code de suivi | Livré | Code PL-AAAA-NNNN, suivi public sans compte |
-| EF-PLA-03 | Accusé de réception automatique horodaté | Livré | Horodatage à l'enregistrement |
+| EF-PLA-03 | Accusé de réception automatique horodaté | Livré | Horodatage à l'enregistrement + e-mail d'accusé de réception au plaignant si une adresse est fournie |
 | EF-PLA-04 | Qualification (nature, gravité, PS, recevabilité, sensibilité) | Livré | Fiche plainte complète |
 | EF-PLA-05 | Routage automatique des plaintes sensibles en circuit restreint | Livré | Natures sensibles → circuit réservé (gestionnaire dédié + Resp. E&S Groupe) ; accès refusés journalisés |
 | EF-PLA-06/07 | Délais avec échéance, instruction jusqu'à clôture | Livré | Échéances, résolution, position du plaignant, recours |
@@ -40,7 +40,7 @@ Traçabilité entre le cahier des charges CDC-SGES-EDK-2026-01 et la présente v
 | EF-PLA-09 | Suivi anti-représailles | Livré | Champ dédié aux plaintes internes |
 | EF-SST-01 | Déclaration rapide terrain avec photos et géolocalisation | Partiel | Formulaire < 3 min avec GPS et téléversement de photos (capture caméra sur mobile) ; mode hors connexion à venir |
 | EF-SST-02/03 | Typologie complète, gravité paramétrable et circuits | Livré | 9 types du CDC ; gravité ≥ 4 = significatif |
-| EF-SST-04 | Notification automatique holding/DG < 4 h | Livré | Horodatage automatique à la déclaration |
+| EF-SST-04 | Notification automatique holding/DG < 4 h | Livré | E-mail automatique immédiat (Brevo) à la DG et au Responsable E&S Groupe dès la déclaration, horodaté et journalisé |
 | EF-SST-05 | Analyse des causes racines et actions correctives | Livré | Arbre des causes / 5P / Ishikawa + création d'action liée |
 | EF-SST-06 | TF, TG, LTIFR, TRIR, heures travaillées | Livré | Calcul automatique depuis incidents + effectifs |
 | EF-SST-07→11 | DUERP, permis de travail, EPI, suivi médical, inspections mobiles | À venir | |
