@@ -1,5 +1,5 @@
 <%- include('partials/header', { titre: 'Conformité' }) %>
-<h1>Module 3 — Conformité légale, permis et autorisations</h1>
+<h1>Module 3 : Conformité légale, permis et autorisations</h1>
 <p class="sous-titre">Registre réglementaire, alertes d'échéance J-180 à J-7, covenants IFC (EF-CONF-01/02/03/07)</p>
 
 <% if (taux !== null) { %>
@@ -41,10 +41,10 @@
             <button class="bouton mini" type="submit">OK</button>
           </form>
         </details></td>
-      <td><%= p.reference || '—' %></td><td><%= p.autorite || '—' %></td>
-      <td><%= p.date_expiration || '—' %><% if (p.jours !== null) { %> <small>(<%= p.jours<0 ? -p.jours + ' j de retard' : 'J-' + p.jours %>)</small><% } %></td>
+      <td><%= p.reference || 'N/A' %></td><td><%= p.autorite || 'N/A' %></td>
+      <td><%= fdate(p.date_expiration) %><% if (p.jours !== null) { %> <small>(<%= p.jours<0 ? -p.jours + ' j de retard' : 'J-' + p.jours %>)</small><% } %></td>
       <td><% if (p.alerte) { %><span class="badge <%= p.alerte.classe %>"><%= p.alerte.seuil %></span><% } else { %><span class="badge vert">OK</span><% } %></td>
-      <td><span class="badge <%= p.statut==='valide' ? 'vert' : p.statut==='expire' ? 'rouge' : 'orange' %>"><%= p.statut %></span></td>
+      <td><span class="badge <%= p.statut==='valide' ? 'vert' : p.statut==='expire' ? 'rouge' : 'orange' %>"><%= L(p.statut) %></span></td>
     </tr>
   <% }) %>
 </table></div>
@@ -71,7 +71,7 @@
     <tr>
       <td><%= e.pays %></td>
       <td><%= e.thematique %><% if (e.covenant_ifc) { %> <span class="badge violet">Covenant IFC</span><% } %></td>
-      <td><%= e.texte %></td><td style="font-size:.8rem;"><%= e.applicabilite || '—' %></td>
+      <td><%= e.texte %></td><td style="font-size:.8rem;"><%= e.applicabilite || 'N/A' %></td>
       <td>
         <form class="inline" method="post" action="/exigences/<%= e.id %>/statut">
           <select name="statut_conformite" class="mini">

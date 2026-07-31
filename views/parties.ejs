@@ -1,5 +1,5 @@
 <%- include('partials/header', { titre: 'Parties prenantes' }) %>
-<h1>Module 7 — Engagement des parties prenantes</h1>
+<h1>Module 7 : Engagement des parties prenantes</h1>
 <p class="sous-titre">Cartographie par site et journal des interactions avec engagements suivis (EF-PAR-01/03/04)</p>
 
 <h2>Cartographie</h2>
@@ -18,7 +18,7 @@
 <div class="table-scroll"><table>
   <tr><th>Nom</th><th>Catégorie</th><th>Site</th><th>Contact</th></tr>
   <% pps.forEach(p => { %>
-    <tr><td><b><%= p.nom %></b></td><td><span class="badge gris"><%= p.categorie %></span></td><td><%= p.site_nom || 'Groupe' %></td><td><%= p.contact || '—' %></td></tr>
+    <tr><td><b><%= p.nom %></b></td><td><span class="badge gris"><%= p.categorie %></span></td><td><%= p.site_nom || 'Groupe' %></td><td><%= p.contact || 'N/A' %></td></tr>
   <% }) %>
 </table></div>
 
@@ -27,8 +27,8 @@
   <form method="post" action="/interactions">
     <div class="champs-3">
       <div class="champ"><label>Partie prenante</label>
-        <select name="partie_prenante_id"><option value="">—</option><% pps.forEach(p => { %><option value="<%= p.id %>"><%= p.nom %></option><% }) %></select></div>
-      <div class="champ"><label>Site</label><select name="site_id"><option value="">—</option><% sites.forEach(s => { %><option value="<%= s.id %>"><%= s.nom %></option><% }) %></select></div>
+        <select name="partie_prenante_id"><option value="">N/A</option><% pps.forEach(p => { %><option value="<%= p.id %>"><%= p.nom %></option><% }) %></select></div>
+      <div class="champ"><label>Site</label><select name="site_id"><option value="">N/A</option><% sites.forEach(s => { %><option value="<%= s.id %>"><%= s.nom %></option><% }) %></select></div>
       <div class="champ"><label>Type *</label><select name="type"><option>consultation</option><option>courrier</option><option>visite</option><option>campagne d'information</option></select></div>
       <div class="champ"><label>Date *</label><input type="date" name="date_interaction" required></div>
     </div>
@@ -40,8 +40,8 @@
 <div class="table-scroll"><table>
   <tr><th>Date</th><th>Partie prenante</th><th>Site</th><th>Type</th><th>Résumé</th><th>Engagements</th></tr>
   <% interactions.forEach(i => { %>
-    <tr><td><%= i.date_interaction %></td><td><%= i.pp_nom || '—' %></td><td><%= i.site_nom || '—' %></td>
-      <td><span class="badge gris"><%= i.type %></span></td><td><%= i.resume || '—' %></td><td><%= i.engagements || '—' %></td></tr>
+    <tr><td><%= fdate(i.date_interaction) %></td><td><%= i.pp_nom || 'N/A' %></td><td><%= i.site_nom || 'N/A' %></td>
+      <td><span class="badge gris"><%= i.type %></span></td><td><%= i.resume || 'N/A' %></td><td><%= i.engagements || 'N/A' %></td></tr>
   <% }) %>
 </table></div>
 <%- include('partials/footer') %>

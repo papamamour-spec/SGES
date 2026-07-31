@@ -1,5 +1,5 @@
 /* Téléversement des pièces justificatives (photos d'incident, preuves de clôture,
-   documents de permis, pièces de plainte). Stockage sur SGES_DATA_DIR/uploads —
+   documents de permis, pièces de plainte). Stockage sur SGES_DATA_DIR/uploads -
    donc sur le volume persistant en déploiement cloud. */
 const path = require('path');
 const fs = require('fs');

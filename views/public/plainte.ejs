@@ -1,7 +1,7 @@
 <%- include('../partials/header', { titre: 'Déposer une plainte' }) %>
 <div class="carte" style="max-width:720px;margin:1.5rem auto;">
   <h1>Déposer une plainte ou une doléance</h1>
-  <p class="sous-titre">Formulaire public — aucun compte n'est nécessaire. Un code de suivi vous sera remis.</p>
+  <p class="sous-titre">Formulaire public · aucun compte n'est nécessaire. Un code de suivi vous sera remis.</p>
   <% if (erreur) { %><div class="alerte"><%= erreur %></div><% } %>
   <form method="post" action="/plainte" enctype="multipart/form-data">
     <div class="champs-2">
@@ -12,7 +12,7 @@
         </select></div>
       <div class="champ"><label>Site concerné (si connu)</label>
         <select name="site_id"><option value="">Je ne sais pas</option>
-          <% sites.forEach(s => { %><option value="<%= s.id %>"><%= s.nom %> — <%= s.pays %></option><% }) %>
+          <% sites.forEach(s => { %><option value="<%= s.id %>"><%= s.nom %> · <%= s.pays %></option><% }) %>
         </select></div>
     </div>
     <div class="champ"><label>Nature de la plainte</label>

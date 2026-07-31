@@ -1,5 +1,5 @@
 <%- include('../partials/header', { titre: 'Reporting IFC' }) %>
-<h1>Module 19 — Reporting et restitutions IFC</h1>
+<h1>Module 19 : Reporting et restitutions IFC</h1>
 <p class="sous-titre">Rapport annuel de suivi (AMR), notifications d'incident, exports (§8, EF-REP-02/03/06)</p>
 
 <div class="carte">
@@ -14,7 +14,7 @@
   <p>Incidents significatifs (gravité ≥ 4) pour lesquels une notification au prêteur peut être générée :</p>
   <% if (!incidents.length) { %><p style="color:var(--gris)">Aucun incident significatif enregistré.</p><% } %>
   <% incidents.forEach(i => { %>
-    <p>• <%= i.date_evenement %> — <%= i.site_nom %> (<%= i.type %>, gravité <%= i.gravite %>/5)
+    <p>• <%= fdate(i.date_evenement) %> · <%= i.site_nom %> (<%= L(i.type) %>, gravité <%= i.gravite %>/5)
       <a class="bouton mini" href="/reporting/notification/<%= i.id %>">Générer la notification</a></p>
   <% }) %>
 </div>

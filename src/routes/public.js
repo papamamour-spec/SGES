@@ -32,14 +32,14 @@ router.post('/plainte', upload.array('photos', 3), (req, res) => {
     .run(code, b.mecanisme === 'interne' ? 'interne' : 'externe', 'web', b.site_id || null, b.nature || null, b.description.trim(),
       anonyme ? null : (b.nom || null), anonyme ? null : (b.contact || null), anonyme ? 1 : 0, sensible, sensible ? 4 : 2);
   const nPhotos = enregistrerFichiers(req.files, 'plainte', r.lastInsertRowid, 'public');
-  logAudit(null, 'creation', 'plainte_publique', null, `${code}${sensible ? ' (circuit sensible)' : ''}${nPhotos ? ` — ${nPhotos} pièce(s)` : ''}`);
+  logAudit(null, 'creation', 'plainte_publique', null, `${code}${sensible ? ' (circuit sensible)' : ''}${nPhotos ? ` · ${nPhotos} pièce(s)` : ''}`);
   const pl = db.prepare('SELECT p.*, s.nom site_nom FROM plaintes p LEFT JOIN sites s ON s.id=p.site_id WHERE p.id=?').get(r.lastInsertRowid);
   mailer.accuserReceptionPlainte(pl);
   mailer.alerterNouvellePlainte(pl, pl.site_nom);
   res.render('public/plainte_ok', { code });
 });
 
-// Suivi par code (dépôt anonyme comme confidentiel — EF-PLA-02)
+// Suivi par code (dépôt anonyme comme confidentiel · EF-PLA-02)
 router.get('/suivi', (req, res) => {
   const code = (req.query.code || '').trim().toUpperCase();
   let plainte = null, introuvable = false;

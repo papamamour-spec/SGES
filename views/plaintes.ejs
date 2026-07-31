@@ -1,11 +1,11 @@
 <%- include('partials/header', { titre: 'Plaintes' }) %>
-<h1>Module 8 — Mécanisme de gestion des plaintes</h1>
+<h1>Module 8 : Mécanisme de gestion des plaintes</h1>
 <p class="sous-titre">Deux dispositifs distincts : externe (communautés, PS1) et interne (travailleurs, PS2) · dépôt public sur <a href="/plainte" target="_blank">/plainte</a></p>
 
 <div class="grille-kpi">
   <div class="kpi"><div class="valeur"><%= stats.total || 0 %></div><div class="libelle">Plaintes reçues</div></div>
   <div class="kpi"><div class="valeur"><%= stats.total ? Math.round((stats.resolues/stats.total)*100) : 0 %> %</div><div class="libelle">Taux de résolution</div></div>
-  <div class="kpi"><div class="valeur"><%= stats.delai_moyen ?? '—' %> j</div><div class="libelle">Délai moyen de traitement</div></div>
+  <div class="kpi"><div class="valeur"><%= stats.delai_moyen ?? 'N/A' %> j</div><div class="libelle">Délai moyen de traitement</div></div>
   <div class="kpi"><div class="valeur"><%= stats.externes || 0 %> / <%= (stats.total||0)-(stats.externes||0) %></div><div class="libelle">Externes / internes</div></div>
 </div>
 
@@ -19,9 +19,9 @@
       <div class="champ"><label>Mécanisme *</label><select name="mecanisme"><option value="externe">Externe (communautés)</option><option value="interne">Interne (travailleurs)</option></select></div>
       <div class="champ"><label>Canal *</label>
         <select name="canal"><option value="registre_papier">Registre papier</option><option value="numero_vert">Numéro vert</option><option value="courriel">Courriel</option><option value="boite">Boîte à suggestions</option><option value="web">Web</option><option value="mobile">Mobile</option></select></div>
-      <div class="champ"><label>Site</label><select name="site_id"><option value="">—</option><% sites.forEach(s => { %><option value="<%= s.id %>"><%= s.nom %></option><% }) %></select></div>
+      <div class="champ"><label>Site</label><select name="site_id"><option value="">N/A</option><% sites.forEach(s => { %><option value="<%= s.id %>"><%= s.nom %></option><% }) %></select></div>
       <div class="champ"><label>Nature</label><input name="nature"></div>
-      <div class="champ"><label>PS concernée</label><select name="ps_concernee"><option value="">—</option><% ['PS1','PS2','PS3','PS4','PS5','PS6','PS7','PS8'].forEach(ps => { %><option><%= ps %></option><% }) %></select></div>
+      <div class="champ"><label>PS concernée</label><select name="ps_concernee"><option value="">N/A</option><% ['PS1','PS2','PS3','PS4','PS5','PS6','PS7','PS8'].forEach(ps => { %><option><%= ps %></option><% }) %></select></div>
       <div class="champ"><label>Gravité (1–5)</label><input type="number" name="gravite" min="1" max="5" value="2"></div>
       <div class="champ"><label>Nom du plaignant</label><input name="plaignant_nom"></div>
       <div class="champ"><label>Contact</label><input name="plaignant_contact"></div>
@@ -41,10 +41,10 @@
   <% rows.forEach(p => { %>
     <tr>
       <td><a href="/plaintes/<%= p.id %>"><b><%= p.code_suivi %></b></a><% if (p.sensible) { %> <span class="badge rouge">sensible</span><% } %><% if (p.anonyme) { %> <span class="badge gris">anonyme</span><% } %></td>
-      <td><%= p.mecanisme %></td><td><%= p.canal %></td><td><%= p.site_nom || '—' %></td><td><%= p.nature || '—' %></td>
+      <td><%= L(p.mecanisme) %></td><td><%= L(p.canal) %></td><td><%= p.site_nom || 'N/A' %></td><td><%= p.nature || 'N/A' %></td>
       <td><span class="badge <%= p.gravite>=4 ? 'rouge' : p.gravite===3 ? 'orange' : 'vert' %>"><%= p.gravite %>/5</span></td>
-      <td><%= p.date_depot.slice(0,16) %></td>
-      <td><span class="badge <%= ['resolue','close'].includes(p.statut) ? 'vert' : p.statut==='rejetee' ? 'gris' : 'orange' %>"><%= p.statut %></span></td>
+      <td><%= fdate(p.date_depot) %></td>
+      <td><span class="badge <%= ['resolue','close'].includes(p.statut) ? 'vert' : p.statut==='rejetee' ? 'gris' : 'orange' %>"><%= L(p.statut) %></span></td>
     </tr>
   <% }) %>
 </table></div>

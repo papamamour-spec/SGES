@@ -146,7 +146,7 @@ CREATE TABLE IF NOT EXISTS habilitations (
   actif INTEGER NOT NULL DEFAULT 1
 );
 
--- Module 6 : urgences — équipements de sécurité et exercices
+-- Module 6 : urgences - équipements de sécurité et exercices
 CREATE TABLE IF NOT EXISTS equipements_securite (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   site_id INTEGER NOT NULL REFERENCES sites(id),
@@ -390,5 +390,35 @@ CREATE TABLE IF NOT EXISTS audit_log (
 // Migration légère : colonne de suivi du dernier seuil d'alerte envoyé par permis
 // (évite les envois en double du planificateur quotidien).
 try { db.exec('ALTER TABLE permis ADD COLUMN alerte_envoyee TEXT'); } catch (e) { /* colonne déjà présente */ }
+
+// Migration de mise en forme : suppression des tirets cadratins des données textuelles
+// existantes (norme de rédaction de l'interface). Idempotente.
+const COLS_TEXTE = {
+  entites: ['nom', 'profil_risque'], sites: ['nom'],
+  politiques: ['titre', 'theme', 'contenu', 'approbateur'],
+  risques: ['description', 'mesures', 'categorie', 'responsable', 'justification_revision'],
+  permis: ['type', 'autorite', 'commentaire', 'reference'],
+  exigences_legales: ['pays', 'thematique', 'texte', 'applicabilite'],
+  actions: ['description', 'responsable', 'preuve', 'validateur'],
+  formations: ['theme', 'formateur'], habilitations: ['titulaire', 'type'],
+  equipements_securite: ['type', 'identifiant'], exercices_urgence: ['type', 'compte_rendu'],
+  parties_prenantes: ['nom', 'contact'], interactions_pp: ['resume', 'engagements'],
+  plaintes: ['nature', 'description', 'resolution', 'plaignant_nom', 'suivi_represailles'],
+  incidents: ['description', 'declarant', 'mesures_immediates', 'autorites_notifiees', 'cause_racine'],
+  dechets: ['flux', 'filiere', 'prestataire'], tiers: ['nom'],
+  audits: ['intitule', 'auditeur', 'conclusions'],
+  non_conformites: ['description', 'responsable', 'verification_efficacite'],
+  documents: ['titre', 'mots_cles'], users: ['nom'], notifications: ['sujet'],
+  facteurs_emission: ['source'],
+};
+for (const [table, cols] of Object.entries(COLS_TEXTE)) {
+  for (const col of cols) {
+    try {
+      db.prepare(`UPDATE ${table} SET ${col} = REPLACE(${col}, ' — ', ' - ') WHERE ${col} LIKE '%—%'`).run();
+      db.prepare(`UPDATE ${table} SET ${col} = REPLACE(${col}, '—', '-') WHERE ${col} LIKE '%—%'`).run();
+    } catch (e) { /* table/colonne absente sur une base plus ancienne */ }
+  }
+}
+try { db.prepare(`UPDATE exigences_legales SET pays = 'Tous pays' WHERE pays IN ('-', '')`).run(); } catch (e) {}
 
 module.exports = db;

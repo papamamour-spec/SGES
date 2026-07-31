@@ -16,8 +16,8 @@ const seedTx = db.transaction(() => {
   const sites = {};
   const addSite = (ent, code, nom, type, pays, ville) => { sites[code] = insSite.run(ent, code, nom, type, pays, ville).lastInsertRowid; };
 
-  addSite(holding, 'SIEGE', 'Siège Groupe EDK — Ngor Almadies', 'siege', 'Sénégal', 'Dakar');
-  // EDK OIL — stations et dépôt
+  addSite(holding, 'SIEGE', 'Siège Groupe EDK - Ngor Almadies', 'siege', 'Sénégal', 'Dakar');
+  // EDK OIL - stations et dépôt
   ['Yoff', 'Pikine', 'Rufisque', 'Thiès', 'Mbour', 'Kaolack', 'Touba', 'Saint-Louis', 'Ziguinchor', 'Tambacounda'].forEach((v, i) =>
     addSite(oil, `ST-${String(i + 1).padStart(2, '0')}`, `Station EDK OIL ${v}`, 'station', 'Sénégal', v));
   addSite(oil, 'DEP-01', 'Dépôt hydrocarbures Bargny', 'depot', 'Sénégal', 'Bargny');
@@ -25,7 +25,7 @@ const seedTx = db.transaction(() => {
   ['Almadies', 'Plateau', 'Sacré-Cœur', 'Guédiawaye', 'Thiès'].forEach((v, i) =>
     addSite(lp, `MAG-${String(i + 1).padStart(2, '0')}`, `Magasin LOW PRICE ${v}`, 'magasin', 'Sénégal', v));
   addSite(lp, 'ENT-01', 'Entrepôt central LOW PRICE Diamniadio', 'entrepot', 'Sénégal', 'Diamniadio');
-  // DJOLOF CHICKEN — multi-pays
+  // DJOLOF CHICKEN - multi-pays
   ['Dakar Point E', 'Dakar Ouakam', 'Thiès'].forEach((v, i) =>
     addSite(djc, `RES-SN-${i + 1}`, `Djolof Chicken ${v}`, 'restaurant', 'Sénégal', v.split(' ')[0]));
   addSite(djc, 'RES-GN-1', 'Djolof Chicken Conakry Kaloum', 'restaurant', 'Guinée', 'Conakry');
@@ -34,7 +34,7 @@ const seedTx = db.transaction(() => {
   addSite(tef, 'USI-01', 'Usine TEFESS Sandiara (démarrage 2027)', 'usine', 'Sénégal', 'Sandiara');
   addSite(qp, 'QP-01', 'Siège QuickPay Dakar', 'siege', 'Sénégal', 'Dakar');
 
-  // ---- Comptes utilisateurs (un par rôle livré, §6.3) — mot de passe : edk2026
+  // ---- Comptes utilisateurs (un par rôle livré, §6.3) - mot de passe : edk2026
   const hash = bcrypt.hashSync('edk2026', 10);
   const insUser = db.prepare('INSERT INTO users (nom, email, password_hash, role, entite_id, site_id) VALUES (?,?,?,?,?,?)');
   insUser.run('Administrateur fonctionnel', 'admin@edk.sn', hash, 'admin', holding, null);
@@ -72,11 +72,11 @@ const seedTx = db.transaction(() => {
   insRis.run(qp, null, 'PS1', 'Données personnelles', 'Violation de données clients monnaie électronique', 4, 2,
     'Chiffrement, conformité CDP Sénégal, tests d’intrusion annuels', 3, 1, 'DSI', 'maitrise');
 
-  // ---- Permis (Module 3) — échéances variées pour illustrer les alertes J-180…J-7
+  // ---- Permis (Module 3) - échéances variées pour illustrer les alertes J-180…J-7
   const insPer = db.prepare(`INSERT INTO permis (site_id, type, reference, autorite, date_obtention, date_expiration, statut, commentaire) VALUES (?,?,?,?,?,?,?,?)`);
   const today = new Date();
   const plusJours = (j) => { const d = new Date(today); d.setDate(d.getDate() + j); return d.toISOString().slice(0, 10); };
-  insPer.run(sites['DEP-01'], 'Récépissé ICPE — dépôt d’hydrocarbures', 'ICPE-2023-114', 'DEEC / Ministère de l’Environnement', '2023-06-01', plusJours(25), 'valide', 'Renouvellement à engager');
+  insPer.run(sites['DEP-01'], 'Récépissé ICPE - dépôt d’hydrocarbures', 'ICPE-2023-114', 'DEEC / Ministère de l’Environnement', '2023-06-01', plusJours(25), 'valide', 'Renouvellement à engager');
   insPer.run(sites['ST-01'], 'Autorisation d’exploitation station-service', 'AE-YOFF-2024-08', 'Ministère du Pétrole et des Énergies', '2024-03-15', plusJours(160), 'valide', null);
   insPer.run(sites['ST-02'], 'Autorisation d’exploitation station-service', 'AE-PIK-2022-31', 'Ministère du Pétrole et des Énergies', '2022-01-10', plusJours(-12), 'expire', 'Dossier de renouvellement déposé');
   insPer.run(sites['ENT-01'], 'Quitus environnemental entrepôt', 'QE-DIAM-2025-02', 'DEEC', '2025-04-01', plusJours(300), 'valide', null);
@@ -85,13 +85,13 @@ const seedTx = db.transaction(() => {
 
   // ---- Exigences légales / covenants (Module 3)
   const insEx = db.prepare(`INSERT INTO exigences_legales (pays, thematique, texte, applicabilite, covenant_ifc, statut_conformite) VALUES (?,?,?,?,?,?)`);
-  insEx.run('Sénégal', 'Environnement', 'Code de l’environnement — régime ICPE et EIES', 'EDK OIL, TEFESS, LOW PRICE (entrepôt)', 0, 'conforme');
-  insEx.run('Sénégal', 'Travail', 'Code du travail — déclaration des accidents du travail, CHS, médecine du travail', 'Toutes entités', 0, 'partiel');
-  insEx.run('Sénégal', 'Données personnelles', 'Loi 2008-12 sur la protection des données — déclaration CDP', 'QuickPay, SIRH Groupe, Plateforme SGES', 0, 'conforme');
+  insEx.run('Sénégal', 'Environnement', 'Code de l’environnement - régime ICPE et EIES', 'EDK OIL, TEFESS, LOW PRICE (entrepôt)', 0, 'conforme');
+  insEx.run('Sénégal', 'Travail', 'Code du travail - déclaration des accidents du travail, CHS, médecine du travail', 'Toutes entités', 0, 'partiel');
+  insEx.run('Sénégal', 'Données personnelles', 'Loi 2008-12 sur la protection des données - déclaration CDP', 'QuickPay, SIRH Groupe, Plateforme SGES', 0, 'conforme');
   insEx.run('Guinée', 'Hygiène', 'Réglementation sanitaire applicable à la restauration', 'Djolof Chicken Conakry', 0, 'a_evaluer');
   insEx.run('Gambie', 'Hygiène', 'Food Safety and Quality Act', 'Djolof Chicken Banjul', 0, 'a_evaluer');
-  insEx.run('—', 'Covenant IFC', 'Convention de prêt IFC n°50059 — mise en œuvre du PAES, reporting annuel AMR, notification d’incident significatif', 'Groupe (co-emprunteurs)', 1, 'partiel');
-  insEx.run('—', 'Covenant IFC', 'Respect de la Liste d’exclusion IFC pour toute nouvelle activité', 'Groupe', 1, 'conforme');
+  insEx.run('Tous pays', 'Covenant IFC', 'Convention de prêt IFC n°50059 - mise en œuvre du PAES, reporting annuel AMR, notification d’incident significatif', 'Groupe (co-emprunteurs)', 1, 'partiel');
+  insEx.run('Tous pays', 'Covenant IFC', 'Respect de la Liste d’exclusion IFC pour toute nouvelle activité', 'Groupe', 1, 'conforme');
 
   // ---- Actions PAES et autres (Module 4)
   const insAct = db.prepare(`INSERT INTO actions (origine, ref_paes, description, entite_id, site_id, responsable, echeance, priorite, statut, preuve, validateur, cloture_le)
@@ -126,9 +126,9 @@ const seedTx = db.transaction(() => {
   const insPP = db.prepare('INSERT INTO parties_prenantes (site_id, nom, categorie, contact) VALUES (?,?,?,?)');
   const ppBargny = insPP.run(sites['DEP-01'], 'Collectif des riverains de Bargny', 'communauté', 'Président : M. Faye').lastInsertRowid;
   insPP.run(sites['DEP-01'], 'Commune de Bargny', 'autorité', 'Secrétariat municipal');
-  insPP.run(null, 'DEEC — Direction de l’Environnement', 'autorité', null);
+  insPP.run(null, 'DEEC - Direction de l’Environnement', 'autorité', null);
   const insInt = db.prepare('INSERT INTO interactions_pp (partie_prenante_id, site_id, type, date_interaction, resume, engagements) VALUES (?,?,?,?,?,?)');
-  insInt.run(ppBargny, sites['DEP-01'], 'consultation', '2026-04-18', 'Réunion publique sur le plan d’urgence du dépôt — 35 participants, liste de présence archivée.', 'Diffuser les consignes d’alerte aux riverains avant fin juin.');
+  insInt.run(ppBargny, sites['DEP-01'], 'consultation', '2026-04-18', 'Réunion publique sur le plan d’urgence du dépôt - 35 participants, liste de présence archivée.', 'Diffuser les consignes d’alerte aux riverains avant fin juin.');
 
   // ---- Effectifs (PS2 / indicateurs)
   const insEff = db.prepare('INSERT INTO effectifs (site_id, periode, effectif, femmes, hommes, cdi, sous_traitants, heures_travaillees) VALUES (?,?,?,?,?,?,?,?)');
@@ -142,17 +142,17 @@ const seedTx = db.transaction(() => {
     });
   });
 
-  // ---- Incidents (Module 10) — dont le scénario du cas d'usage §16.2
+  // ---- Incidents (Module 10) - dont le scénario du cas d'usage §16.2
   const insInc = db.prepare(`INSERT INTO incidents (site_id, type, gravite, date_evenement, description, declarant, lat, lng, jours_arret, mesures_immediates, autorites_notifiees, notifie_dg_le, cause_racine, methode_analyse, statut)
     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`);
   const incDeversement = insInc.run(sites['ST-06'], 'environnement', 4, '2026-07-08 10:42',
-    'Déversement d’environ 180 L de gazole lors du dépotage — zone à faible couverture réseau, déclaré en mode déconnecté puis synchronisé.',
+    'Déversement d’environ 180 L de gazole lors du dépotage - zone à faible couverture réseau, déclaré en mode déconnecté puis synchronisé.',
     'Agent de station Kaolack', 14.152, -16.072, 0,
     'Épandage absorbant, fermeture de la fosse, périmètre de sécurité', 'DEEC (notification sous 48 h)',
     '2026-07-08 12:10', 'Flexible de dépotage usé non détecté lors du contrôle mensuel', 'arbre des causes', 'en_analyse').lastInsertRowid;
-  insInc.run(sites['MAG-02'], 'AT_arret', 3, '2026-06-19 09:15', 'Chute d’un employé en réserve — entorse, 8 jours d’arrêt.',
+  insInc.run(sites['MAG-02'], 'AT_arret', 3, '2026-06-19 09:15', 'Chute d’un employé en réserve - entorse, 8 jours d’arrêt.',
     'Responsable magasin Plateau', null, null, 8, 'Premiers secours, déclaration CSS sous 48 h', 'Caisse de Sécurité Sociale', null, 'Sol encombré en zone de réception', '5P', 'clos');
-  insInc.run(sites['RES-SN-2'], 'presque_accident', 2, '2026-07-02 18:30', 'Départ de feu maîtrisé sur friteuse — extincteur utilisé.',
+  insInc.run(sites['RES-SN-2'], 'presque_accident', 2, '2026-07-02 18:30', 'Départ de feu maîtrisé sur friteuse - extincteur utilisé.',
     'Manager restaurant', null, null, 0, 'Coupure gaz, ventilation', null, null, null, null, 'en_analyse');
   insInc.run(sites['DEP-01'], 'situation_dangereuse', 3, '2026-07-15 07:50', 'Camion-citerne stationné hors zone dédiée pendant le dépotage.',
     'Chef de dépôt', null, null, 0, 'Rappel des consignes au transporteur', null, null, null, null, 'declare');
@@ -163,7 +163,7 @@ const seedTx = db.transaction(() => {
   insAct.run('incident', null, 'Réviser la grille d’inspection mensuelle des stations (point flexibles)', oil, null,
     'Correspondant E&S EDK OIL', plusJours(15), 'moyenne', 'ouverte', null, null, null);
 
-  // ---- Plaintes (Module 8) — dont la plainte riverain liée à l'incident
+  // ---- Plaintes (Module 8) - dont la plainte riverain liée à l'incident
   const insPla = db.prepare(`INSERT INTO plaintes (code_suivi, mecanisme, canal, site_id, nature, ps_concernee, description, plaignant_nom, plaignant_contact, anonyme, sensible, gravite, recevable, statut, date_depot, date_accuse, date_echeance, incident_id)
     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`);
   insPla.run('PL-2026-0001', 'externe', 'web', sites['ST-06'], 'Nuisance environnementale', 'PS3',
@@ -190,9 +190,9 @@ const seedTx = db.transaction(() => {
 
   const insFE = db.prepare('INSERT INTO facteurs_emission (type, scope, facteur_kgco2e, version, source) VALUES (?,?,?,?,?)');
   insFE.run('electricite_kwh', 2, 0.53, '2026.1', 'Facteur réseau Senelec (mix thermique)');
-  insFE.run('diesel_l', 1, 2.68, '2026.1', 'GHG Protocol — combustion diesel');
-  insFE.run('essence_l', 1, 2.31, '2026.1', 'GHG Protocol — combustion essence');
-  insFE.run('gaz_kg', 1, 2.98, '2026.1', 'GHG Protocol — GPL');
+  insFE.run('diesel_l', 1, 2.68, '2026.1', 'GHG Protocol - combustion diesel');
+  insFE.run('essence_l', 1, 2.31, '2026.1', 'GHG Protocol - combustion essence');
+  insFE.run('gaz_kg', 1, 2.98, '2026.1', 'GHG Protocol - GPL');
 
   const insDec = db.prepare('INSERT INTO dechets (site_id, periode, flux, quantite_kg, filiere, prestataire, bordereau) VALUES (?,?,?,?,?,?,?)');
   insDec.run(sites['DEP-01'], '2026-06', 'Boues d’hydrocarbures', 850, 'traitement agréé', 'SRH SA', 'BSD-2026-0612');
@@ -223,7 +223,7 @@ const seedTx = db.transaction(() => {
   const insDoc = db.prepare('INSERT INTO documents (titre, typologie, entite_id, site_id, version, statut, date_revision, mots_cles) VALUES (?,?,?,?,?,?,?,?)');
   insDoc.run('Manuel du SGES Groupe EDK', 'procédure', null, null, '1.0', 'diffuse', '2027-06-30', 'SGES, PS1, manuel');
   insDoc.run('EIES usine TEFESS Sandiara', 'EIES', tef, sites['USI-01'], '2.1', 'approuve', null, 'EIES, ICPE, Sandiara');
-  insDoc.run('Plan d’Opération Interne — dépôt Bargny', "plan d'urgence", oil, sites['DEP-01'], '3.0', 'diffuse', '2026-12-31', 'POI, déversement, incendie');
+  insDoc.run('Plan d’Opération Interne - dépôt Bargny', "plan d'urgence", oil, sites['DEP-01'], '3.0', 'diffuse', '2026-12-31', 'POI, déversement, incendie');
   insDoc.run('Procédure de gestion des plaintes communautaires', 'procédure', null, null, '1.2', 'diffuse', '2027-03-31', 'plaintes, parties prenantes');
   insDoc.run('Plan d’Engagement des Parties Prenantes (SEP)', 'procédure', null, null, '1.0', 'verification', null, 'SEP, consultation');
 });
@@ -242,5 +242,5 @@ module.exports = { seedIfEmpty };
 if (require.main === module) {
   console.log(seedIfEmpty()
     ? 'Seed terminé : périmètre EDK, comptes de démonstration (mot de passe : edk2026) et données d’exemple créés.'
-    : 'Base déjà initialisée — seed ignoré.');
+    : 'Base déjà initialisée - seed ignoré.');
 }

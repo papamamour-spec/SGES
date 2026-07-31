@@ -1,6 +1,6 @@
 /* Envoi d'e-mails transactionnels via l'API Brevo (https://api.brevo.com/v3/smtp/email).
    Sans clé API (BREVO_API_KEY absente), les envois sont « simulés » : rien ne part,
-   mais chaque notification est journalisée en base — la traçabilité reste démontrable.
+   mais chaque notification est journalisée en base · la traçabilité reste démontrable.
 
    Variables d'environnement :
    - BREVO_API_KEY : clé API Brevo (transactionnel)
@@ -27,7 +27,7 @@ function gabarit(titre, corps) {
     <div style="background:#135c39;color:#fff;padding:12px 18px;border-radius:6px 6px 0 0;"><b>SGES Groupe EDK</b></div>
     <div style="border:1px solid #dde4e0;border-top:none;padding:18px;border-radius:0 0 6px 6px;">
       <h2 style="margin-top:0;font-size:17px;color:#1f2d27;">${titre}</h2>${corps}
-      <p style="color:#6b7a73;font-size:12px;margin-bottom:0;">Message automatique de la Plateforme SGES — Groupe EDK SA (PAES IFC n°50059). Ne pas répondre.</p>
+      <p style="color:#6b7a73;font-size:12px;margin-bottom:0;">Message automatique de la Plateforme SGES · Groupe EDK SA (PAES IFC n°50059). Ne pas répondre.</p>
     </div></div>`;
 }
 
@@ -68,10 +68,10 @@ function emailsParRoles(roles) {
 function notifierIncidentSignificatif(incident, siteNom) {
   return envoyer({
     to: emailsParRoles(['dg', 'es_groupe']),
-    sujet: `[SGES] Incident significatif gravité ${incident.gravite}/5 — ${siteNom}`,
+    sujet: `[SGES] Incident significatif gravité ${incident.gravite}/5 · ${siteNom}`,
     titre: 'Incident significatif déclaré',
     corps: `<p><b>Site :</b> ${siteNom}<br><b>Type :</b> ${incident.type}<br><b>Gravité :</b> ${incident.gravite}/5<br>
-      <b>Date de l'événement :</b> ${incident.date_evenement}<br><b>Déclarant :</b> ${incident.declarant || '—'}</p>
+      <b>Date de l'événement :</b> ${incident.date_evenement}<br><b>Déclarant :</b> ${incident.declarant || 'N/A'}</p>
       <p>${incident.description}</p>${lien(`/incidents/${incident.id}`)}`,
     objet: 'incident', objetId: incident.id,
   });
@@ -97,11 +97,11 @@ function alerterNouvellePlainte(plainte, siteNom) {
   const roles = plainte.sensible ? ['plaintes_sensibles'] : ['es_groupe'];
   return envoyer({
     to: emailsParRoles(roles),
-    sujet: `[SGES] Nouvelle plainte ${plainte.code_suivi}${plainte.sensible ? ' — circuit confidentiel' : ''}`,
+    sujet: `[SGES] Nouvelle plainte ${plainte.code_suivi}${plainte.sensible ? ' · circuit confidentiel' : ''}`,
     titre: plainte.sensible ? 'Nouvelle plainte sensible (circuit confidentiel)' : 'Nouvelle plainte reçue',
     corps: plainte.sensible
       ? `<p>Une plainte sensible a été déposée (code ${plainte.code_suivi}). Le contenu n'est pas transmis par e-mail : consultez le circuit confidentiel de la Plateforme.</p>${lien(`/plaintes/${plainte.id}`)}`
-      : `<p><b>Code :</b> ${plainte.code_suivi}<br><b>Mécanisme :</b> ${plainte.mecanisme}<br><b>Site :</b> ${siteNom || 'non précisé'}<br><b>Nature :</b> ${plainte.nature || '—'}</p>${lien(`/plaintes/${plainte.id}`)}`,
+      : `<p><b>Code :</b> ${plainte.code_suivi}<br><b>Mécanisme :</b> ${plainte.mecanisme}<br><b>Site :</b> ${siteNom || 'non précisé'}<br><b>Nature :</b> ${plainte.nature || 'N/A'}</p>${lien(`/plaintes/${plainte.id}`)}`,
     objet: 'plainte', objetId: plainte.id,
   });
 }
@@ -124,9 +124,9 @@ async function alertesQuotidiennes() {
     const seuil = niveauAlerte(jours);
     await envoyer({
       to: emailsParRoles(['es_groupe', 'es_filiale']),
-      sujet: `[SGES] ${seuil.seuil} — ${p.type} (${p.site_nom})`,
+      sujet: `[SGES] ${seuil.seuil} · ${p.type} (${p.site_nom})`,
       titre: `Alerte échéance de permis : ${seuil.seuil}`,
-      corps: `<p><b>${p.type}</b> — ${p.site_nom}<br><b>Référence :</b> ${p.reference || '—'}<br>
+      corps: `<p><b>${p.type}</b> · ${p.site_nom}<br><b>Référence :</b> ${p.reference || 'N/A'}<br>
         <b>Expiration :</b> ${p.date_expiration} (${jours < 0 ? `expiré depuis ${-jours} jour(s)` : `dans ${jours} jour(s)`})</p>
         <p>Engager sans délai la procédure de renouvellement auprès de : ${p.autorite || 'l’autorité émettrice'}.</p>${lien('/conformite')}`,
       objet: 'permis', objetId: p.id,
@@ -145,7 +145,7 @@ async function alertesQuotidiennes() {
       sujet: `[SGES] ${retards.length} action(s) en retard`,
       titre: 'Synthèse quotidienne des actions en retard',
       corps: `<ul>${retards.slice(0, 20).map((a) =>
-        `<li><b>${a.ref_paes || a.origine}</b> — ${a.description} (échéance ${a.echeance}, resp. ${a.responsable || '—'})</li>`).join('')}</ul>
+        `<li><b>${a.ref_paes || a.origine}</b> · ${a.description} (échéance ${a.echeance}, resp. ${a.responsable || 'N/A'})</li>`).join('')}</ul>
         ${retards.length > 20 ? `<p>… et ${retards.length - 20} autre(s).</p>` : ''}${lien('/actions')}`,
       objet: 'actions', objetId: null,
     });

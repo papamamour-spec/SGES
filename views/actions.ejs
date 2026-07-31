@@ -1,5 +1,5 @@
 <%- include('partials/header', { titre: "Plans d'action" }) %>
-<h1>Module 4 — Plans d'action et PAES IFC</h1>
+<h1>Module 4 : Plans d'action et PAES IFC</h1>
 <p class="sous-titre">Référentiel unique alimenté par toutes les sources ; clôture impossible sans preuve (EF-PGM-01/03/06)</p>
 
 <form method="get" class="no-print" style="margin-bottom:1rem;">
@@ -7,7 +7,7 @@
   <select name="origine" class="mini" onchange="this.form.submit()">
     <option value="">Toutes</option>
     <% ['PAES','audit','incident','plainte','inspection','revue_direction','conformite'].forEach(o => { %>
-      <option value="<%= o %>" <%= origine===o ? 'selected' : '' %>><%= o %></option>
+      <option value="<%= o %>" <%= origine===o ? 'selected' : '' %>><%= L(o) %></option>
     <% }) %>
   </select>
 </form>
@@ -17,11 +17,11 @@
     <div class="champ"><label>Description *</label><textarea name="description" required></textarea></div>
     <div class="champs-3">
       <div class="champ"><label>Origine *</label>
-        <select name="origine"><% ['PAES','audit','incident','plainte','inspection','revue_direction','conformite'].forEach(o => { %><option><%= o %></option><% }) %></select></div>
+        <select name="origine"><% ['PAES','audit','incident','plainte','inspection','revue_direction','conformite'].forEach(o => { %><option value="<%= o %>"><%= L(o) %></option><% }) %></select></div>
       <div class="champ"><label>Réf. PAES (si applicable)</label><input name="ref_paes" placeholder="PAES-5"></div>
       <div class="champ"><label>Priorité</label><select name="priorite"><option>haute</option><option selected>moyenne</option><option>basse</option></select></div>
-      <div class="champ"><label>Entité</label><select name="entite_id"><option value="">—</option><% entites.forEach(e => { %><option value="<%= e.id %>"><%= e.nom %></option><% }) %></select></div>
-      <div class="champ"><label>Site</label><select name="site_id"><option value="">—</option><% sites.forEach(s => { %><option value="<%= s.id %>"><%= s.nom %></option><% }) %></select></div>
+      <div class="champ"><label>Entité</label><select name="entite_id"><option value="">N/A</option><% entites.forEach(e => { %><option value="<%= e.id %>"><%= e.nom %></option><% }) %></select></div>
+      <div class="champ"><label>Site</label><select name="site_id"><option value="">N/A</option><% sites.forEach(s => { %><option value="<%= s.id %>"><%= s.nom %></option><% }) %></select></div>
       <div class="champ"><label>Responsable</label><input name="responsable"></div>
       <div class="champ"><label>Échéance</label><input type="date" name="echeance"></div>
       <div class="champ"><label>Budget (FCFA)</label><input type="number" name="budget_fcfa"></div>
@@ -34,20 +34,20 @@
   <tr><th>Origine</th><th>Description</th><th>Périmètre</th><th>Responsable</th><th>Échéance</th><th>Priorité</th><th>Statut</th><th>Mise à jour</th></tr>
   <% rows.forEach(a => { %>
     <tr>
-      <td><span class="badge <%= a.origine==='PAES' ? 'violet' : 'gris' %>"><%= a.ref_paes || a.origine %></span></td>
+      <td><span class="badge <%= a.origine==='PAES' ? 'violet' : 'gris' %>"><%= a.ref_paes || L(a.origine) %></span></td>
       <td><b><%= a.description %></b>
         <% if (a.preuve) { %><br><small style="color:var(--gris)">Preuve : <%= a.preuve %><%= a.validateur ? ' · validée par ' + a.validateur : '' %></small><% } %></td>
       <td><%= a.site_nom || a.entite_nom || 'Groupe' %></td>
-      <td><%= a.responsable || '—' %></td><td><%= a.echeance || '—' %></td>
-      <td><span class="badge <%= a.priorite==='haute' ? 'rouge' : a.priorite==='moyenne' ? 'orange' : 'gris' %>"><%= a.priorite %></span></td>
-      <td><span class="badge <%= a.statut==='cloturee' ? 'vert' : a.statut==='en_retard' ? 'rouge' : 'orange' %>"><%= a.statut %></span></td>
+      <td><%= a.responsable || 'N/A' %></td><td><%= fdate(a.echeance) %></td>
+      <td><span class="badge <%= a.priorite==='haute' ? 'rouge' : a.priorite==='moyenne' ? 'orange' : 'gris' %>"><%= L(a.priorite) %></span></td>
+      <td><span class="badge <%= a.statut==='cloturee' ? 'vert' : a.statut==='en_retard' ? 'rouge' : 'orange' %>"><%= L(a.statut) %></span></td>
       <td>
         <% if (a.nb_pieces) { %><span class="badge vert">📎 <%= a.nb_pieces %></span><% } %>
         <% if (a.statut !== 'cloturee') { %>
         <details><summary style="cursor:pointer;font-size:.8rem;">mettre à jour</summary>
           <form method="post" action="/actions/<%= a.id %>/statut" enctype="multipart/form-data" style="min-width:220px;">
             <select name="statut" class="mini">
-              <% ['ouverte','en_cours','en_retard','cloturee'].forEach(s => { %><option value="<%= s %>" <%= a.statut===s ? 'selected' : '' %>><%= s %></option><% }) %>
+              <% ['ouverte','en_cours','en_retard','cloturee'].forEach(s => { %><option value="<%= s %>" <%= a.statut===s ? 'selected' : '' %>><%= L(s) %></option><% }) %>
             </select>
             <input type="file" name="fichiers" multiple accept=".jpg,.jpeg,.png,.webp,.gif,.heic,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt" style="margin-top:.3rem;font-size:.75rem;">
             <input name="preuve" placeholder="Commentaire sur la preuve (optionnel)" style="margin-top:.3rem;">
@@ -55,7 +55,7 @@
             <button class="bouton mini" type="submit" style="margin-top:.3rem;">Valider</button>
           </form>
         </details>
-        <% } else { %><small style="color:var(--gris)">clôturée le <%= (a.cloture_le || '').slice(0,10) %></small><% } %>
+        <% } else { %><small style="color:var(--gris)">clôturée le <%= fdate(a.cloture_le) %></small><% } %>
       </td>
     </tr>
   <% }) %>

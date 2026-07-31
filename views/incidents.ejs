@@ -1,5 +1,5 @@
 <%- include('partials/header', { titre: 'Incidents SST' }) %>
-<h1>Module 10 — Santé, sécurité au travail et incidents</h1>
+<h1>Module 10 : Santé, sécurité au travail et incidents</h1>
 <p class="sous-titre">Déclaration rapide depuis le terrain, notification automatique DG si gravité ≥ 4 (EF-SST-01/03/04)</p>
 
 <details class="form-ajout" open><summary>+ Déclarer un événement</summary><div>
@@ -18,7 +18,7 @@
           <option value="sanitaire">Incident sanitaire</option>
           <option value="tiers">Incident impliquant un tiers / communauté</option>
         </select></div>
-      <div class="champ"><label>Gravité (1–5) — ≥ 4 notifie la DG *</label><input type="number" name="gravite" min="1" max="5" value="2" required></div>
+      <div class="champ"><label>Gravité (1–5) · ≥ 4 notifie la DG *</label><input type="number" name="gravite" min="1" max="5" value="2" required></div>
       <div class="champ"><label>Date et heure *</label><input type="datetime-local" name="date_evenement" required></div>
       <div class="champ"><label>Jours d'arrêt</label><input type="number" name="jours_arret" value="0" min="0"></div>
       <div class="champ"><label>Décès</label><input type="number" name="deces" value="0" min="0"></div>
@@ -41,13 +41,13 @@
   <tr><th>Date</th><th>Site</th><th>Type</th><th>Gravité</th><th>Description</th><th>DG notifiée</th><th>Statut</th></tr>
   <% rows.forEach(i => { %>
     <tr>
-      <td><%= i.date_evenement %></td>
+      <td><%= fdate(i.date_evenement) %></td>
       <td><%= i.site_nom %><br><small style="color:var(--gris)"><%= i.entite_nom %></small></td>
-      <td><%= i.type %></td>
+      <td><%= L(i.type) %></td>
       <td><span class="badge <%= i.gravite>=4 ? 'rouge' : i.gravite===3 ? 'orange' : 'vert' %>"><%= i.gravite %>/5</span></td>
       <td><a href="/incidents/<%= i.id %>"><%= i.description.slice(0,90) %><%= i.description.length>90 ? '…' : '' %></a></td>
-      <td><%= i.notifie_dg_le ? i.notifie_dg_le : '—' %></td>
-      <td><span class="badge <%= i.statut==='clos' ? 'vert' : 'orange' %>"><%= i.statut %></span></td>
+      <td><%= i.notifie_dg_le ? i.notifie_dg_le : 'N/A' %></td>
+      <td><span class="badge <%= i.statut==='clos' ? 'vert' : 'orange' %>"><%= L(i.statut) %></span></td>
     </tr>
   <% }) %>
 </table></div>
