@@ -2,9 +2,16 @@ const path = require('path');
 const express = require('express');
 const session = require('express-session');
 
+const { seedIfEmpty } = require('./src/seed');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Initialisation automatique de la base au premier démarrage (déploiement cloud)
+if (seedIfEmpty()) console.log('Base initialisée avec le périmètre EDK et les données de démonstration.');
+
+// Derrière le proxy TLS de l'hébergeur (Railway…) : cookie secure automatique
+app.set('trust proxy', 1);
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.urlencoded({ extended: true }));
@@ -13,7 +20,7 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'sges-edk-dev-secret',
   resave: false,
   saveUninitialized: false,
-  cookie: { httpOnly: true, sameSite: 'lax', maxAge: 8 * 3600 * 1000 },
+  cookie: { httpOnly: true, sameSite: 'lax', secure: 'auto', maxAge: 8 * 3600 * 1000 },
 }));
 
 app.use((req, res, next) => {

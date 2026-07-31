@@ -3,13 +3,7 @@
 const bcrypt = require('bcryptjs');
 const db = require('./db');
 
-const count = db.prepare('SELECT COUNT(*) n FROM entites').get().n;
-if (count > 0) {
-  console.log('Base déjà initialisée — seed ignoré.');
-  process.exit(0);
-}
-
-const tx = db.transaction(() => {
+const seedTx = db.transaction(() => {
   const insEnt = db.prepare('INSERT INTO entites (code, nom, type, profil_risque) VALUES (?,?,?,?)');
   const holding = insEnt.run('EDK', 'Groupe EDK SA (holding)', 'holding', 'Gouvernance, conformité, chaîne d’approvisionnement').lastInsertRowid;
   const oil = insEnt.run('OIL', 'EDK OIL', 'filiale', 'Pollution sols/eaux, ICPE, incendie, transport matières dangereuses').lastInsertRowid;
@@ -234,5 +228,19 @@ const tx = db.transaction(() => {
   insDoc.run('Plan d’Engagement des Parties Prenantes (SEP)', 'procédure', null, null, '1.0', 'verification', null, 'SEP, consultation');
 });
 
-tx();
-console.log('Seed terminé : périmètre EDK, comptes de démonstration (mot de passe : edk2026) et données d’exemple créés.');
+// Idempotent : ne fait rien si la base contient déjà des entités.
+// Appelé au démarrage du serveur (déploiement cloud) ou via `npm run seed`.
+function seedIfEmpty() {
+  const count = db.prepare('SELECT COUNT(*) n FROM entites').get().n;
+  if (count > 0) return false;
+  seedTx();
+  return true;
+}
+
+module.exports = { seedIfEmpty };
+
+if (require.main === module) {
+  console.log(seedIfEmpty()
+    ? 'Seed terminé : périmètre EDK, comptes de démonstration (mot de passe : edk2026) et données d’exemple créés.'
+    : 'Base déjà initialisée — seed ignoré.');
+}
