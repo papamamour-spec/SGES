@@ -2,7 +2,7 @@ const path = require('path');
 const express = require('express');
 const session = require('express-session');
 
-const { seedIfEmpty } = require('./src/seed');
+const { seedIfEmpty, resetAdminSiDemande } = require('./src/seed');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -10,6 +10,8 @@ const PORT = process.env.PORT || 3000;
 // Initialisation automatique au premier démarrage : compte administrateur seul
 // (la base métier démarre vide ; jeu de démonstration via `npm run seed:demo`)
 seedIfEmpty();
+// Récupération d'urgence : ADMIN_RESET_PASSWORD redéfinit le mot de passe admin au démarrage
+resetAdminSiDemande();
 
 // Helpers d'affichage disponibles dans toutes les vues :
 // L() = libellé français d'un code interne, LA() = variante audits, fdate() = date JJ/MM/AAAA

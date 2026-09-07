@@ -24,6 +24,8 @@ Compte administrateur initial, configurable par variables d'environnement :
 
 Dans tous les cas, changez le mot de passe à la première connexion (`/admin`, modifier votre compte).
 
+**Mot de passe administrateur perdu** : définissez la variable `ADMIN_RESET_PASSWORD` (8 caractères minimum) et redéployez — au démarrage, le mot de passe du compte `ADMIN_EMAIL` est redéfini à cette valeur (le compte est créé, promu administrateur et réactivé si nécessaire, opération tracée en piste d'audit). Reconnectez-vous, **retirez immédiatement la variable**, puis changez le mot de passe depuis `/admin`.
+
 **Instance déjà déployée avec les données de démonstration** : connectez-vous en administrateur puis utilisez `/admin` → « Zone de réinitialisation » (confirmation `REINITIALISER`). Toutes les données métier et tous les comptes sauf le vôtre sont supprimés ; la piste d'audit et les facteurs d'émission GES sont conservés.
 
 **Jeu de démonstration (optionnel)** : `npm run seed:demo` sur une base vide charge le périmètre EDK simulé et les comptes de démonstration (mot de passe `edk2026`) pour les démos IFC. Jamais chargé automatiquement.
