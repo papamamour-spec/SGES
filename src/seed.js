@@ -9,6 +9,12 @@
      passe aléatoire est généré et affiché UNE SEULE FOIS dans le journal de
      démarrage. À changer à la première connexion dans tous les cas.
 
+   Récupération d'urgence (mot de passe administrateur perdu) :
+   - ADMIN_RESET_PASSWORD : si définie (8 caractères min), le mot de passe du
+     compte ADMIN_EMAIL est réinitialisé à cette valeur À CHAQUE démarrage
+     (compte créé, promu admin et réactivé si nécessaire). Retirer la variable
+     immédiatement après s'être reconnecté. Opération tracée en piste d'audit.
+
    Jeu de démonstration : `npm run seed:demo` (jamais chargé automatiquement). */
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
@@ -47,7 +53,34 @@ function seedIfEmpty() {
   return true;
 }
 
-module.exports = { seedIfEmpty };
+// Réinitialisation d'urgence du compte administrateur, pilotée par variable
+// d'environnement (accès perdu). Ne fait rien si ADMIN_RESET_PASSWORD est absente.
+function resetAdminSiDemande() {
+  const nouveau = process.env.ADMIN_RESET_PASSWORD || '';
+  if (!nouveau) return false;
+  const email = (process.env.ADMIN_EMAIL || 'admin@edk.sn').trim().toLowerCase();
+  if (nouveau.length < 8) {
+    console.error('ADMIN_RESET_PASSWORD ignorée : 8 caractères minimum.');
+    return false;
+  }
+  const hash = bcrypt.hashSync(nouveau, 10);
+  const existant = db.prepare('SELECT id FROM users WHERE email=?').get(email);
+  if (existant) {
+    db.prepare("UPDATE users SET password_hash=?, role='admin', actif=1 WHERE id=?").run(hash, existant.id);
+  } else {
+    db.prepare("INSERT INTO users (nom, email, password_hash, role) VALUES ('Administrateur fonctionnel',?,?,'admin')").run(email, hash);
+  }
+  db.prepare("INSERT INTO audit_log (user_email, action, objet, details) VALUES ('systeme','modification','utilisateur',?)")
+    .run(`réinitialisation d'urgence du mot de passe administrateur (${email}) via ADMIN_RESET_PASSWORD`);
+  console.log('================================================================');
+  console.log(`RÉINITIALISATION D'URGENCE : le mot de passe du compte ${email} a été redéfini.`);
+  console.log('Retirez la variable ADMIN_RESET_PASSWORD dès que vous êtes reconnecté,');
+  console.log('puis changez le mot de passe depuis /admin.');
+  console.log('================================================================');
+  return true;
+}
+
+module.exports = { seedIfEmpty, resetAdminSiDemande };
 
 if (require.main === module) {
   if (!seedIfEmpty()) console.log('Des comptes existent déjà : initialisation ignorée.');
